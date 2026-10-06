@@ -51,9 +51,9 @@ struct Game{
   {
     audio_man = a_audio_man;
 
-    audio_man->load_bg_music("sounds/bg_music.mp3");
-    audio_man->load_sound("sounds/die.mp3", "die");
-    audio_man->load_sound("sounds/touch.wav", "hit");
+    //audio_man->load_bg_music("sounds/bg_music.mp3");
+    //audio_man->load_sound("sounds/die.mp3", "die");
+    //audio_man->load_sound("sounds/touch.wav", "hit");
     
       
     _load_current_level();
