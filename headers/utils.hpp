@@ -62,11 +62,13 @@ struct FpsVusaliser{
   sf::Font font;
   sf::Text text;
   float timer = 0.0f;
+
+  bool font_ok = true;
   
   FpsVusaliser(const std::string& font_path="font.ttf", size_t a_charsize=20): text(font){
       if (!font.openFromFile(font_path)){
           std::cout << "Failed to load font from: " << font_path << "\n";
-          exit(1);
+          font_ok = false;
       }
       text.setCharacterSize(a_charsize);
       text.setString("fps: calculating...");
@@ -76,6 +78,7 @@ struct FpsVusaliser{
 
   float show_fps(sf::RenderWindow& window, sf::Vector2f at={10.0f, 10.0f}){
       float dt = fps_clock.restart().asSeconds();
+      if (!font_ok) return dt;
       timer += dt;
       if (timer >= 0.5f){
           text.setString("fps: " + std::to_string(1/dt));
@@ -93,17 +96,19 @@ struct TextSystem{
     sf::Text text;
     sf::Font font;
     size_t initial_size;
+    bool font_ok = true;
     
     TextSystem(const std::string& font_path="font.ttf", size_t a_charsize=20):text(font){
         if (!font.openFromFile(font_path)){
           std::cout << "Failed to load font from: " << font_path << "\n";
-          exit(1);
+          font_ok = false;
         }
         text.setCharacterSize(a_charsize);
         initial_size = a_charsize;
     }
 
     void show_text(sf::RenderTarget& target, const std::string& msg, sf::Vector2f at, sf::Color color=sf::Color::White, size_t current_charsize=0){
+        if (!font_ok) return;
         text.setPosition(at);
         text.setFillColor(color);
         if (current_charsize != 0){
