@@ -53,6 +53,9 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
       if (event->is<sf::Event::Closed>()){
         return;
       }
+      if (const auto* key_press = event->getIf<sf::Event::KeyPressed>()){
+        return;
+      }
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         if (touch_info.active) continue;
         touch_info = {touch->position, touch->finger, true};

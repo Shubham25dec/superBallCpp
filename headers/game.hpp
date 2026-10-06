@@ -8,6 +8,7 @@
 #include "button.hpp"
 #include "particles.hpp"
 #include "settings.hpp"
+#include <SFML/Window/Keyboard.hpp>
 
 
 typedef enum BallState{
@@ -144,6 +145,12 @@ struct Game{
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>()) {
         window.close();
+      }
+      if (const auto* key_press = event->getIf<sf::Event::KeyPressed>()){
+        if (key_press->code == sf::Keyboard::Key::Escape){
+          window.close();
+          exit(0);
+        }
       }
       //if (event->is<sf::Event::MouseButtonPressed>()){
       //  _on_screen_click_down(V2f(sf::Mouse::getPosition()));
