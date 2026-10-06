@@ -30,6 +30,13 @@ inline sf::CircleShape makeCircle(float radius, sf::Vector2f center, sf::Color c
 }
 
 
+typedef struct TouchInfo{
+  sf::Vector2i pos;
+  unsigned int fingerid;
+  bool active = false;
+}TouchInfo;
+
+
 struct RNG{
     std::random_device rd;  // Random seed
     std::mt19937 gen; //rn generator

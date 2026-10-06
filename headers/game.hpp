@@ -16,6 +16,7 @@ typedef enum BallState{
   UNBORN
 }BallState;
 
+
 struct Game{
   size_t levelno=0;
   Level current_level;
@@ -27,7 +28,7 @@ struct Game{
   ParticleSystemManager particle_system_man;
   Settings settings;
 
-  unsigned int touch_finger_id=0;
+  utils::TouchInfo touch_info;
   //TODO: SSSSSSSSSSSSSSSSS
   //
   // 
@@ -49,7 +50,6 @@ struct Game{
     audio_man->load_bg_music("sounds/bg_music.mp3");
     audio_man->load_sound("sounds/die.mp3", "die");
     audio_man->load_sound("sounds/touch.wav", "hit");
-    
       
     _load_current_level();
     win_size = window.getSize();
@@ -145,20 +145,27 @@ struct Game{
       if (event->is<sf::Event::Closed>()) {
         window.close();
       }
-      if (event->is<sf::Event::MouseButtonPressed>()){
-        _on_screen_click_down(V2f(sf::Mouse::getPosition()));
-      }else if (event->is<sf::Event::MouseButtonReleased>()){
-        _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
-      }
+      //if (event->is<sf::Event::MouseButtonPressed>()){
+      //  _on_screen_click_down(V2f(sf::Mouse::getPosition()));
+      //}else if (event->is<sf::Event::MouseButtonReleased>()){
+       // _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
+      //}
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
-        auto pos = V2f(touch->position);
-        touch_finger_id = touch->finger;
+        V2f pos = V2f(touch->position);
+        if (touch_info.active) continue; //a finger is already active do not register another
+        touch_info = {touch->position, touch->finger, true};
         _on_screen_click_down(pos);
       }
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
-        if (touch->finger == touch_finger_id) {//ensure same finger event 
+        if (touch->finger == touch_info.fingerid) {//ensure same finger event 
           auto pos = V2f(touch->position);
           _on_screen_click_up(pos, window, temp_font);
+          touch_info.active = false;
+        }
+      }
+      if (const auto* touch = event->getIf<sf::Event::TouchMoved>()){
+        if (touch->finger == touch_info.fingerid){
+          touch_info.pos = touch->position;
         }
       }
     }
@@ -261,7 +268,7 @@ struct Game{
   }
   
   sf::Vector2f _get_selection_arrow_end(){
-    auto m_pos = V2f(sf::Mouse::getPosition());
+    auto m_pos = V2f(touch_info.pos);
     auto dir =  V2f(m_pos) - ball.start_pos;
     if (dir.length() > 0) {
       dir = dir.normalized();

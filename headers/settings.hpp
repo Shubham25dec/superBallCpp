@@ -47,20 +47,20 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
   std::string names[SETTING_COUNT] = {"music", "sound", "particles", "show fps", "aim line", "shape shadows", "MSAA" };
   ToggleOpt* options[SETTING_COUNT] = {&settings.music, &settings.sound, &settings.particles, &settings.show_fps, &settings.aim_line, &settings.shape_shadows, &settings.MSAA};
   
-  bool click_down = false;
-  sf::Vector2i click_pos;
+  utils::TouchInfo touch_info;
   while (1){
     while (const std::optional event = window.pollEvent()){
       if (event->is<sf::Event::Closed>()){
-        window.close();
-        exit(-1);
+        return;
       }
-      if (event->is<sf::Event::MouseButtonPressed>()){
-        click_down = true;
-        click_pos = sf::Mouse::getPosition();
+      if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
+        if (touch_info.active) continue;
+        touch_info = {touch->position, touch->finger, true};
       }
-      if (event->is<sf::Event::MouseButtonReleased>()){
-        click_down = false;
+      if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
+        if (touch_info.fingerid == touch->finger){//ensure same finger
+          touch_info.active = false;
+        }
       }
     }
 
@@ -74,7 +74,7 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
     rect.setFillColor(sf::Color::Cyan);
     window.draw(rect); //Back button;
     window.draw(text);
-    if (click_down && rect.getGlobalBounds().contains(sf::Vector2f(click_pos.x, click_pos.y))){
+    if (touch_info.active && rect.getGlobalBounds().contains(sf::Vector2f(touch_info.pos))){//back button pressed
       return;
     }
     rect_y += rect_size.y + pady;
@@ -87,9 +87,9 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
       rect.setFillColor(color);
       window.draw(text);
       window.draw(rect);
-      if (click_down && rect.getGlobalBounds().contains(sf::Vector2f(click_pos.x, click_pos.y))){
+      if (touch_info.active && rect.getGlobalBounds().contains(sf::Vector2f(touch_info.pos))){
           *options[i] = (current==ON)? OFF : ON;
-          click_down  = false;
+          touch_info.active  = false;
       }
       rect_y += rect_size.y + pady;
     }
