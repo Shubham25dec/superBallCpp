@@ -7,12 +7,7 @@
 #include "audio_system.hpp"
 #include "button.hpp"
 #include "particles.hpp"
-
 #include "settings.hpp"
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Event.hpp>
-#include <SFML/Window/Mouse.hpp>
-#include <atomic>
 
 
 typedef enum BallState{
@@ -51,9 +46,9 @@ struct Game{
   {
     audio_man = a_audio_man;
 
-    //audio_man->load_bg_music("sounds/bg_music.mp3");
-    //audio_man->load_sound("sounds/die.mp3", "die");
-    //audio_man->load_sound("sounds/touch.wav", "hit");
+    audio_man->load_bg_music("sounds/bg_music.mp3");
+    audio_man->load_sound("sounds/die.mp3", "die");
+    audio_man->load_sound("sounds/touch.wav", "hit");
     
       
     _load_current_level();
@@ -69,7 +64,7 @@ struct Game{
     if (settings.music){
       audio_man->start_bg_music();
     }
-    //settings_screen(window, settings, text_sys.font);
+
     while (window.isOpen()){
       float dt = clock.restart().asSeconds();
       _handle_events(window, text_sys.font);
