@@ -7,8 +7,7 @@
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-            <meta-data android:name="android.app.lib_name" android:value="sfml-activity" />
-            <meta-data android:name="sfml.app.lib_name" android:value="superball" />
+            <meta-data android:name="android.app.lib_name" android:value="superball" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

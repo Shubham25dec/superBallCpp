@@ -14,7 +14,7 @@ int main() {
     
     sf::RenderWindow window(
         desktopMode, 
-        "Mobile Bouncing Ball", 
+        "superBall",
         sf::Style::Default,
         sf::State::Fullscreen,
         window_settings
