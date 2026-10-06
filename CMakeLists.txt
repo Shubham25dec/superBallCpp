@@ -22,3 +22,7 @@ target_link_libraries(superball PRIVATE
 if(ANDROID)
     target_link_options(superball PRIVATE -u ANativeActivity_onCreate)
 endif()
+
+if(ANDROID)
+    target_link_libraries(superball PRIVATE android log)
+endif()
