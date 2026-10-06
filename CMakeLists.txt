@@ -18,3 +18,7 @@ target_include_directories(superball PRIVATE headers)
 target_precompile_headers(superball PRIVATE headers/pch.hpp)
 target_link_libraries(superball PRIVATE
     SFML::Graphics SFML::Audio SFML::Window SFML::System SFML::Main)
+
+if(ANDROID)
+    target_link_options(superball PRIVATE -u ANativeActivity_onCreate)
+endif()
