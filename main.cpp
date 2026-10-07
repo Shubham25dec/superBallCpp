@@ -10,12 +10,11 @@ int main() {
     
     sf::RenderWindow window(desktopMode,
                         "superball",
-                        sf::Style::Default,
+                        sf::Style::None,
                         sf::State::Fullscreen,
                         win_settings);
     
-    window.setFramerateLimit(120);
-    //FIXME: temporary 120fps, set to 60 later!
+    window.setFramerateLimit(60);
 
     AudioManager audio_man;
     
