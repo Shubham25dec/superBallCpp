@@ -116,11 +116,16 @@ struct Game{
       psm = &particle_system_man;
       particle_system_man.update(dt);
     }
-    auto result = ball.update(dt, current_level.polygons, current_level.lines, psm);
-    if (result.ball_collides && settings.sound){
-      audio_man->play_sound("hit");
+    auto result = ball.update(dt, current_level.polygons, current_level.lines);
+    if (result.ball_collides){
+      _add_particle_system(result.collision_pos,
+                           result.collision_obj_color);
+      if (settings.sound) audio_man->play_sound("hit");
     }
     if (result.ball_dies){
+      _add_particle_system(result.collision_pos,
+                           result.collision_obj_color);
+      
       _reset_level();
       if (settings.sound) audio_man->play_sound("die");
       return;
@@ -128,6 +133,7 @@ struct Game{
     if (ball.isdead && ball_state != MAKING) ball_state = UNBORN;
     if (!ball.isdead && (ball.end_pos.x > win_size.x || ball.end_pos.x < 0 ||
        ball.end_pos.y > win_size.y || ball.end_pos.y < 0)){
+      _add_particle_system(ball.end_pos, ball.ball_shape.getFillColor());
       if (current_level.get_alive_poly_count() == 0){
         //FIXME since get_live_poly_count iterates over polygons, we can count it somewhere else where we already iterating for eg drawing.
         printf("--- Level %zu complete ---\n", levelno);
@@ -135,7 +141,6 @@ struct Game{
         return;
       }
       _reset_level();
-      //particle_system_man.add_default_particle_system(ball.end_pos);
       if (settings.sound) audio_man->play_sound("die");
     }
   }
@@ -284,6 +289,15 @@ struct Game{
     }
     auto end = dir + m_pos;
     return end;
+  }
+
+  void _add_particle_system(V2f pos, sf::Color color){
+    particle_system_man.add_particle_system(
+        ParticleSystem(
+          particle_system_man.rng,
+          pos, color
+        )
+    );
   }
   
   

@@ -14,12 +14,13 @@ typedef struct LineIntersectionResult{
 }LI_Result;
 
 
-struct BallUpdateResult{
-  bool ball_dies = false;
+typedef struct BallUpdateResult{
+  bool ball_dies     = false;
   bool ball_collides = false;
-  //TODO: utilize below member to draw particles on collion from Game() instead of passing the particleManager to Ball
-  // V2f collision_pos = {0.f, 0.f};
-};
+  V2f collision_pos;
+  sf::Color collision_obj_color;//what color the object which collided with ball was
+  //in case of ball dying it maybe color of ball
+}BU_Result;
 
 inline float distance(V2f A, V2f B){
   /*get distance between pts A and B*/
@@ -80,16 +81,25 @@ struct Ball{
 
   
   BallUpdateResult update(const float dt, Polygons& polygons,
-              std::vector<std::array<V2f, 2>>& lines,
-              ParticleSystemManager* particle_sys_man = nullptr
+              std::vector<std::array<V2f, 2>>& lines
             ){
     BallUpdateResult result;
     if (isdead) return result;//since already dead
     end_pos += (velocity * speed * dt);
     ball_shape.setPosition(end_pos);
 
-    result.ball_collides = _handle_polygon_collision(polygons, particle_sys_man);
-    result.ball_dies = _handle_line_collision(lines, particle_sys_man);
+    auto result1 = _handle_polygon_collision(polygons);
+    if (result1.ball_collides){
+      result.ball_collides = true;
+      result.collision_pos = result1.collision_pos;
+      result.collision_obj_color = result1.collision_obj_color;
+    }
+    auto result2 = _handle_line_collision(lines);
+    if (result2.intersects){
+      result.ball_dies = true;
+      result.collision_pos = result2.at;
+      result.collision_obj_color = ball_shape.getFillColor();
+    }
     return result;
   }
 
@@ -108,7 +118,7 @@ struct Ball{
   }
 
   //return true if collision happens
-  bool _handle_polygon_collision(Polygons& polygons, ParticleSystemManager* particle_sys_man){
+  BU_Result _handle_polygon_collision(Polygons& polygons){
     float min_dist = 999999999999.0f;
     int closest_index = -1;
     LI_Result ci_result; //closest intersection result
@@ -124,39 +134,32 @@ struct Ball{
         }
       }
     }
+    BU_Result bu_result;
     if (closest_index != -1){ //collision happend
       auto collided = polygons[closest_index];
-      auto particle_color = sf::Color::Black;
+      auto body_color = sf::Color::Black;
       if (collided.is_mortal){
-        particle_color = sf::Color::White;
+        body_color = sf::Color::White;
         polygons.erase(polygons.begin()+closest_index);
       }//remove polygon if it is mortal
       _reflect_from_line(ci_result.line_start, ci_result.line_end);
       start_pos = ci_result.at + velocity * 1.0f;
       end_pos = start_pos;
-      if (particle_sys_man){
-        particle_sys_man->add_particle_system(
-              ParticleSystem(particle_sys_man->rng,
-                             ci_result.at,
-                             particle_color,
-                             {1.5f, 3.5f},
-                             {100.f, 200.f},
-                             CIRCULAR,
-                             50,
-                             {70.f, 200.f})
-        );
-      }
-      return true;
+      bu_result.ball_collides = true;
+      bu_result.collision_pos = ci_result.at;
+      bu_result.collision_obj_color = body_color;
+      return bu_result;
     }
-    return false;
+    return bu_result;
   }
 
   // return whether ball dies
-  bool _handle_line_collision(std::vector<std::array<V2f, 2>>& lines, ParticleSystemManager* particle_sys_man){
+  LI_Result _handle_line_collision(std::vector<std::array<V2f, 2>>& lines){
     float min_dist = 999999999999.0f;
     int closest_index = -1;
     LI_Result ci_result;
-    for (size_t i=0; i<lines.size(); i++){      auto result = lines_intersect(lines[i][0], lines[i][1], start_pos, end_pos);
+    for (size_t i=0; i<lines.size(); i++){
+      auto result = lines_intersect(lines[i][0], lines[i][1], start_pos, end_pos);
       if (result.intersects){
         float dist = distance(result.at, start_pos);
         if (dist < min_dist){
@@ -169,21 +172,9 @@ struct Ball{
     if (closest_index != -1){//collision happened
       lines.erase(lines.begin() + closest_index);
       isdead = true;
-      if (particle_sys_man){
-        particle_sys_man->add_particle_system(
-              ParticleSystem(particle_sys_man->rng,
-                             ci_result.at,
-                             ball_shape.getFillColor(),
-                             {1.5f, 3.5f},
-                             {100.f, 200.f},
-                             CIRCULAR,
-                             50,
-                             {70.f, 200.f})
-          );
-      }
-      return true; //ball dies, game should reset level
+      return ci_result;
     }
-    return false; //ball didnt die;
+    return ci_result;
   }
   
 
