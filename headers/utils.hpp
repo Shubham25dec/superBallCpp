@@ -1,9 +1,17 @@
 #pragma once
 #include "pch.hpp"
+#include <SFML/Graphics/RenderTarget.hpp>
 
 
 namespace utils{
     
+
+typedef struct TouchInfo{
+  sf::Vector2f pos;
+  unsigned int fingerid;
+  bool active = false;
+}TouchInfo;
+
 
 [[nodiscard]]
 inline sf::RectangleShape makeLine(sf::Vector2f a, sf::Vector2f b, float thickness, sf::Color color)
@@ -28,13 +36,6 @@ inline sf::CircleShape makeCircle(float radius, sf::Vector2f center, sf::Color c
     cs.setFillColor(color);
     return cs;
 }
-
-
-typedef struct TouchInfo{
-  sf::Vector2i pos;
-  unsigned int fingerid;
-  bool active = false;
-}TouchInfo;
 
 
 struct RNG{
@@ -155,5 +156,15 @@ inline void draw_arrow_cap(sf::RenderTarget& target, V2f start_pos, V2f end_pos,
     target.draw(makeLine(end_pos, end_pos + back.rotatedBy(spread),  thickness, color));
     target.draw(makeLine(end_pos, end_pos + back.rotatedBy(-spread), thickness, color));
 }
+
+
+inline void draw_dotted_line(sf::RenderTarget& target, V2f start, V2f end,
+        float dot_radius = 2.f,
+        size_t dot_count = 10,
+        sf::Color color  = sf::Color::White
+    )
+    {
+        
+    }
 
 };//namespace utils

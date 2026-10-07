@@ -158,21 +158,21 @@ struct Game{
        // _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
       //}
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
-        V2f pos = V2f(touch->position);
+        V2f pos = V2f(window.mapPixelToCoords((touch->position)));
         if (touch_info.active) continue; //a finger is already active do not register another
-        touch_info = {touch->position, touch->finger, true};
+        touch_info = {pos, touch->finger, true};
         _on_screen_click_down(pos);
       }
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
         if (touch->finger == touch_info.fingerid) {//ensure same finger event 
-          auto pos = V2f(touch->position);
+          auto pos = V2f(window.mapPixelToCoords((touch->position)));
           _on_screen_click_up(pos, window, temp_font);
           touch_info.active = false;
         }
       }
       if (const auto* touch = event->getIf<sf::Event::TouchMoved>()){
         if (touch->finger == touch_info.fingerid){
-          touch_info.pos = touch->position;
+          touch_info.pos = V2f(window.mapPixelToCoords(touch->position));
         }
       }
     }
@@ -194,7 +194,6 @@ struct Game{
       ball.start_pos = pos;
       ball.end_pos = ball.start_pos;
     }
-    return;
   }
   
 
@@ -271,11 +270,13 @@ struct Game{
   }
 
   void _apply_updated_settings(){
-    printf("TODO: apply new settings: eg music toggled\n");
+    printf("TODO: apply new settings: eg music toggled or AA\n");
+    if (settings.music) audio_man->start_bg_music();
+    else audio_man->stop_bg_music();
   }
   
   sf::Vector2f _get_selection_arrow_end(){
-    auto m_pos = V2f(touch_info.pos);
+    auto m_pos = touch_info.pos;
     auto dir =  V2f(m_pos) - ball.start_pos;
     if (dir.length() > 0) {
       dir = dir.normalized();

@@ -8,9 +8,9 @@ typedef bool ToggleOpt;
 #define ON   true
 
 struct Settings{
-  ToggleOpt music = OFF;
+  ToggleOpt music = ON;
   ToggleOpt sound = ON;
-  ToggleOpt particles = OFF;
+  ToggleOpt particles = ON;
   ToggleOpt show_fps = ON;
   ToggleOpt aim_line = ON;
   ToggleOpt shape_shadows = ON;
@@ -23,7 +23,7 @@ struct Settings{
   //
   // TODO: think of more settings maybe some ui related stuff
   // 
-  ToggleOpt MSAA=OFF; //anti-aliasing
+  ToggleOpt MSAA=OFF; //multi sample anti-aliasing
 
 };
 
@@ -58,7 +58,7 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
       }
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         if (touch_info.active) continue;
-        touch_info = {touch->position, touch->finger, true};
+        touch_info = {utils::V2f(window.mapPixelToCoords(touch->position)), touch->finger, true};
       }
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
         if (touch_info.fingerid == touch->finger){//ensure same finger

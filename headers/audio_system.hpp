@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.hpp"
+#include <SFML/Audio/Music.hpp>
 
 
 struct GameAudio{
@@ -52,7 +53,12 @@ struct AudioManager{
   }
 
   void start_bg_music(void){
+    if (bg_music.getStatus() == sf::Music::Status::Playing) return; //already playing
     bg_music.play();
+  }
+
+  void stop_bg_music(void){
+    bg_music.stop();
   }
   
 };//AudioManager
