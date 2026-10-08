@@ -8,21 +8,27 @@ using PolyPoints = std::vector<sf::Vector2f>;
 
 #define SOLID_V2F sf::Vector2f(-1.0f, -1.0f)
 
+constexpr auto SHAPE_FILL = sf::Color::White;
+constexpr auto SHAPE_OUT  = sf::Color::Black;
+//TODO: TRY DIFFERENT COLORS
+
+
 class ConvexPolygon : public sf::ConvexShape {
 public:
-    bool is_mortal;
-    ConvexPolygon(const PolyPoints& a_points,
-                  sf::Color a_color=sf::Color::White,
-                  bool a_is_mortal = true
-              ) {
-        if (a_points[0] == SOLID_V2F){ // if polygon is solid, ie cannot break
-            a_is_mortal = false; //solid poly
-            a_color = sf::Color::Black;
+    bool is_mortal = true;
+    ConvexPolygon(const PolyPoints& a_points)
+    {
+        if (a_points[0] == SOLID_V2F){
+            is_mortal = false; //important to set this 1st here
+            setFillColor(SHAPE_OUT);
+            setOutlineColor(SHAPE_FILL);
+            //reversed color in this case
+            // since polygon doesnt die
+        }else{
+            setFillColor(SHAPE_FILL);
+            setOutlineColor(SHAPE_OUT);
         }
-        is_mortal = a_is_mortal;//important to set this 1st here
         setPoints(a_points);
-        setFillColor(a_color);
-        setOutlineColor(sf::Color(255, 255, 255, 100));
     }
 
     void setPoints(const PolyPoints& points) {
@@ -35,7 +41,7 @@ public:
         }
     }
 
-
+    //return true if point lies inside shape
     bool contains(sf::Vector2f point) const {
         // Convert to local space so position/rotation/scale are handled
         sf::Vector2f p = getInverseTransform().transformPoint(point);

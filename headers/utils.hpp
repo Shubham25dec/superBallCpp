@@ -158,13 +158,22 @@ inline void draw_arrow_cap(sf::RenderTarget& target, V2f start_pos, V2f end_pos,
 }
 
 
-inline void draw_dotted_line(sf::RenderTarget& target, V2f start, V2f end,
-        float dot_radius = 2.f,
-        size_t dot_count = 10,
-        sf::Color color  = sf::Color::White
-    )
-    {
-        
+inline void draw_dotted_line(sf::RenderTarget& target,
+            V2f start, V2f end,
+            float dot_radius = 4.f,
+            size_t dot_count = 10,
+            sf::Color color  = sf::Color::Black)
+{
+        V2f dirreal = (end-start);
+        V2f dir = dirreal.normalized();
+        float dot_gap = dirreal.length() / (dot_count - 1);
+        sf::CircleShape shape(dot_radius);
+        shape.setFillColor(color);
+        for (size_t i=0; i<dot_count; i++){
+            shape.setPosition(start);
+            target.draw(shape);
+            start += (dir * dot_gap);
+        }
     }
 
 };//namespace utils
