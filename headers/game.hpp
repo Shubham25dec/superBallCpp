@@ -99,7 +99,7 @@ struct Game{
       if (settings.aim_line){
         auto end_pos = _get_selection_arrow_end();
         window.draw(utils::makeLine(ball.start_pos, end_pos, 2.5f, sf::Color::White));
-        //utils::draw_dotted_line(window, ball.start_pos, end_pos);
+        utils::draw_dotted_line(window, ball.start_pos, end_pos);
         utils::draw_arrow_cap(window, ball.start_pos, end_pos, 20.0f, 2.5f, sf::Color::White);
       }
       window.draw(utils::makeCircle(11.0f, ball.start_pos));

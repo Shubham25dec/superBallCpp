@@ -165,6 +165,9 @@ inline void draw_dotted_line(sf::RenderTarget& target,
             sf::Color color  = sf::Color::Black)
 {
         V2f dirreal = (end-start);
+        if (dirreal.length() == 0){
+            return;
+        }
         V2f dir = dirreal.normalized();
         float dot_gap = dirreal.length() / (dot_count - 1);
         sf::CircleShape shape(dot_radius);
