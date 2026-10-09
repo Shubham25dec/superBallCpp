@@ -182,6 +182,8 @@ struct Ball{
   LI_Result _collides_with_polygon(const ConvexPolygon& poly){
     LI_Result result;
     size_t pc = poly.getPointCount();
+    LI_Result ci_result;
+    float min_dist = 999999999999.f;
     for (size_t x=0; x<pc; x++){
       V2f A = poly.getPoint(x);
       V2f B;
@@ -192,9 +194,15 @@ struct Ball{
       }
       result = lines_intersect(start_pos, end_pos, A, B);
       if (!result.intersects) continue;
-      return result;
+      else{
+        float dist = utils::distance(result.at, start_pos);
+        if (dist < min_dist){
+          min_dist = dist;
+          ci_result = result;
+        }
+      }
     }
-    return result;
+    return ci_result;
   }
 
 

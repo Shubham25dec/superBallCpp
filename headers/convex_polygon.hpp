@@ -28,7 +28,7 @@ public:
             setFillColor(SHAPE_FILL);
             setOutlineColor(SHAPE_OUT);
         }
-
+        //setOutlineThickness(5);
         setPoints(a_points);
     }
 
