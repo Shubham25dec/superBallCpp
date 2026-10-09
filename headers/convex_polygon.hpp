@@ -8,7 +8,7 @@ using PolyPoints = std::vector<sf::Vector2f>;
 
 #define SOLID_V2F sf::Vector2f(-1.0f, -1.0f)
 
-constexpr auto SHAPE_FILL = sf::Color::White;
+constexpr auto SHAPE_FILL = sf::Color::Green;
 constexpr auto SHAPE_OUT  = sf::Color::Black;
 //TODO: TRY DIFFERENT COLORS
 
@@ -28,7 +28,7 @@ public:
             setFillColor(SHAPE_FILL);
             setOutlineColor(SHAPE_OUT);
         }
-        setOutlineThickness(5.f);
+
         setPoints(a_points);
     }
 
