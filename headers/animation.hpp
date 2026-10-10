@@ -191,7 +191,7 @@ struct PolyDeathAnimation{
 		return true;
 	}
 
-	void draw(sf::RenderTarget& target){
+	void draw(sf::RenderTarget& target) const{
 		target.draw(polygon);
 	}
 	
