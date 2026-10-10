@@ -6,7 +6,7 @@
 #include "utils.hpp"
 #include "audio_system.hpp"
 #include "button.hpp"
-#include "particles.hpp"
+#include "animation.hpp"
 #include "settings.hpp"
 
 

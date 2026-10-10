@@ -2,6 +2,10 @@
 
 #include "pch.hpp"
 #include "utils.hpp"
+#include "convex_polygon.hpp"
+#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <vector>
 
 
 using V2f = sf::Vector2f;
@@ -153,4 +157,71 @@ struct ParticleSystemManager{
 	}
 	
 };// struct ParticleSystemManager
- 
+
+
+
+
+struct PolyDeathAnimation{
+	float animation_speed = 50.f;
+	ConvexPolygon polygon;
+	V2f global_center;
+	
+	PolyDeathAnimation(ConvexPolygon a_polygon):polygon(a_polygon){
+			V2f local_center  = polygon.getGeometricCenter();
+			global_center = polygon.getInverseTransform().transformPoint(local_center);
+		}
+
+	bool update(float dt){
+		//TODO: since we do not apply any transformations to the polygon, maybe it is not necessary to
+		// convert to global coordinates, but that may change if I fix the scaling issue for other screen ratio..
+		// TODO end
+		
+		for (size_t i=0; i<polygon.getPointCount(); i++){
+			V2f ith = polygon.getInverseTransform().transformPoint(polygon.getPoint(i)); //in global
+			V2f dir = (global_center - ith); //points towards center
+			float DeathThreshold = 5.f;
+			if (dir.length() != 0){
+				dir = dir.normalized();
+			}else if (dir.length() <= DeathThreshold){
+				return false;
+			}
+			ith += (dir * animation_speed * dt);
+			polygon.setPoint(i, ith);
+		}
+		return true;
+	}
+
+	void draw(sf::RenderTarget& target){
+		target.draw(polygon);
+	}
+	
+}; //struct PolyDeathAnimation
+
+
+
+struct PolyDeathAnimationManager{
+	std::vector<PolyDeathAnimation> anims;
+
+	void add_animation(ConvexPolygon polygon){
+		anims.emplace_back(polygon);
+	}
+
+	void update(float dt){
+		//TODO: find a better way to remove dead anims
+		// FIXME
+		std::vector<PolyDeathAnimation> alive_anims;
+		for (auto& anim : anims){
+			bool is_alive = anim.update(dt);
+			if (is_alive){
+				alive_anims.emplace_back(std::move(anim));
+			}
+		}
+		anims = alive_anims;
+	}
+
+	void draw(sf::RenderTarget& target) const{
+		for (auto& anim: anims){
+			anim.draw(target);
+		}
+	}
+}; //PolyDeathAnimationManager

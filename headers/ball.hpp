@@ -2,7 +2,8 @@
 
 #include "pch.hpp"
 #include "convex_polygon.hpp"
-#include "particles.hpp"
+#include "animation.hpp"
+
 
 using V2f = sf::Vector2f;
 
@@ -67,6 +68,10 @@ struct Ball{
   bool isdead = true;
   sf::CircleShape ball_shape;
 
+  PolyDeathAnimationManager pda_man;
+  //TODO:put this into the game.hpp
+  // FIXME
+
   Ball(V2f a_start_pos={0, 0}, V2f a_velocity={1, 1}, float radius=11, float a_speed = 740,
        sf::Color a_color = sf::Color(255, 165, 0)){
     start_pos = a_start_pos;
@@ -84,6 +89,7 @@ struct Ball{
               std::vector<std::array<V2f, 2>>& lines
             ){
     BallUpdateResult result;
+    pda_man.update(dt);
     if (isdead) return result;//since already dead
     end_pos += (velocity * speed * dt);
     ball_shape.setPosition(end_pos);
@@ -104,6 +110,7 @@ struct Ball{
   }
 
   void draw(sf::RenderWindow& window) const{
+    pda_man.draw(window);
     if (isdead) return;
     window.draw(ball_shape);
 
@@ -140,6 +147,7 @@ struct Ball{
       auto body_color = sf::Color::Black;
       if (collided.is_mortal){
         body_color = sf::Color::White;
+        pda_man.add_animation(collided);//add poly death animation
         polygons.erase(polygons.begin()+closest_index);
       }//remove polygon if it is mortal
       _reflect_from_line(ci_result.line_start, ci_result.line_end);
