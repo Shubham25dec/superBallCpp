@@ -6,17 +6,13 @@
 
 using V2f = sf::Vector2f;
 
-enum ExplosionType{
-	CHAOTIC,
-	CIRCULAR
-};
-
 struct Particle{
 	V2f velocity;
 	V2f original_pos;
 	float speed;
 	float effect_radius;
 	sf::CircleShape shape;
+	bool isdead = false;
 
 	Particle(V2f a_pos, float a_radius, sf::Color a_color, float a_angle, float a_speed, float a_effect_radius){
 		velocity = V2f(1.f, 1.f).normalized().rotatedBy(sf::degrees(a_angle));
@@ -34,12 +30,13 @@ struct Particle{
 		target.draw(shape);
 	}
 
-	//return true if particle should stay alive
-	bool update(float dt){
+	void update(float dt){
 		V2f cur_pos = shape.getPosition() + velocity * speed * dt;
 		shape.setPosition(cur_pos);
 		V2f delta_pos = original_pos - cur_pos;
-		return delta_pos.length() < effect_radius;
+		if (delta_pos.length() >= effect_radius){
+			isdead = true;
+		}
 	}
 	
 }; // struct Particle
@@ -55,26 +52,21 @@ struct ParticleSystem{
            sf::Color a_color = sf::Color::White,
            V2f a_size_range = {1.5f, 3.5f},
            V2f a_speed_range = {100.f, 200.f},
-           ExplosionType a_type = CIRCULAR,
            size_t a_total = 50,
            V2f a_effect_radius_range = {70.f, 200.f}): rng(a_rng) {
-		_generate_particles(a_center, a_size_range, a_speed_range, a_type, a_total, a_color, a_effect_radius_range);
+		_generate_particles(a_center, a_size_range, a_speed_range, a_total, a_color, a_effect_radius_range);
 	}
 
 	void _generate_particles(V2f a_center,
 	               V2f a_size_range,
 	               V2f a_speed_range,
-	               ExplosionType a_type,
 	               size_t a_total,
 	               sf::Color a_color,
 	               V2f a_effect_radius_range)	{
 		size_t count = 0;
 		while (count < a_total){
-			V2f position = (a_type == CIRCULAR)? a_center : _rand_pos_within_bounds(a_center.x-50, a_center.y-50, 100, 100);//100x100 rect
-			//TODO: do not hardcode the rect size above
-
 			particles.emplace_back(
-				position,
+				a_center,
 				rng->randFloat(a_size_range.x, a_size_range.y),
 				a_color,
 				rng->randFloat(0.f, 360.f),
@@ -92,23 +84,20 @@ struct ParticleSystem{
 		}
 	}
 
-	//FIXME: find a better way to remove dead particles
 	void update(float dt){
-		std::vector<Particle> alive_particles;
 		for (auto& particle : particles){
-			bool alive = particle.update(dt);
-			if (alive)
-				alive_particles.emplace_back(particle);
+			particle.update(dt);
 		}
-		particles = alive_particles;
+		//remove dead particles
+		particles.erase(std::remove_if(particles.begin(), particles.end(),
+		  	[](const Particle& p){return p.isdead;}),
+		  	particles.end());
 	}
-
 
 	bool has_particles() const{
 		return particles.size() > 0;
 	}
 	
-
 	V2f _rand_pos_within_bounds(float x, float y, float w, float h){
 		float xpos = rng->randFloat(x, y);
 		float ypos = rng->randFloat(x+w, y+h);
@@ -132,16 +121,14 @@ struct ParticleSystemManager{
 		}
 	}
 
-	//FIXME: find a better way to remove dead systems
 	void update(float dt){
-		std::vector<ParticleSystem> systems;
 		for (auto& ps : p_systems){
 			ps.update(dt);
-			if (ps.has_particles()){
-				systems.emplace_back(ps);
-			}
 		}
-		p_systems = systems;
+		//remove dead systems
+		p_systems.erase(std::remove_if(p_systems.begin(), p_systems.end(),
+		  [](const ParticleSystem& ps){return !ps.has_particles();}),
+		    p_systems.end());
 	}
 
 	void add_default_particle_system(V2f at){
@@ -156,69 +143,71 @@ struct ParticleSystemManager{
 
 
 
-
 struct PolyDeathAnimation{
-	float animation_speed = 250.f;
-	ConvexPolygon polygon;
-	V2f global_center;
-	
-	PolyDeathAnimation(ConvexPolygon a_polygon):polygon(a_polygon){
-			V2f local_center  = polygon.getGeometricCenter();
-			global_center = polygon.getInverseTransform().transformPoint(local_center);
-		}
+  static constexpr float animation_speed = 50.f;
+  static constexpr float ol_thickness = 5.0f;
+	static constexpr float fade_rate = 255.0f / 0.7f;
+  //defines how fast alpha fades. 0.7 secs in this case
+  uint8_t alpha = 255;
+  V2f global_center;
+  ConvexPolygon polygon;
 
-	bool update(float dt){
-		//TODO: since we do not apply any transformations to the polygon, maybe it is not necessary to
-		// convert to global coordinates, but that may change if I fix the scaling issue for other screen ratio..
-		// TODO end
-		
-		for (size_t i=0; i<polygon.getPointCount(); i++){
-			V2f ith = polygon.getInverseTransform().transformPoint(polygon.getPoint(i)); //in global
-			V2f dir = (global_center - ith); //points towards center
-			float DeathThreshold = 15.f;
-			if (dir.length() != 0){
-				dir = dir.normalized();
-			}
-			if (dir.length() <= DeathThreshold){
-				return false;
-			}
-			ith += (dir * animation_speed * dt);
-			polygon.setPoint(i, ith);
-		}
-		return true;
-	}
+  bool is_dead = false;
 
-	void draw(sf::RenderTarget& target) const{
-		target.draw(polygon);
-	}
-	
-}; //struct PolyDeathAnimation
+  PolyDeathAnimation(ConvexPolygon a_polygon):polygon(a_polygon){
+    V2f local_center  = polygon.getGeometricCenter();
+    global_center = polygon.getTransform().transformPoint(local_center);
+    polygon.setFillColor(sf::Color::Transparent);
+    polygon.setOutlineColor(sf::Color::Black);
+    polygon.setOutlineThickness(ol_thickness);
+  }
 
+	void update(float dt){
+    for (size_t i=0; i<polygon.getPointCount(); i++){
+      V2f pt = polygon.getPoint(i);
+      V2f dir = (polygon.getTransform().transformPoint(pt) - global_center).normalized();
+      pt += (dir * dt * animation_speed);
+      polygon.setPoint(i, pt);
+    }
+    sf::Color c = polygon.getOutlineColor();
+    polygon.setOutlineColor({c.r, c.g, c.b, alpha});
+    float f_alpha = (float) alpha;
+    f_alpha -= fade_rate * dt;
+    if (f_alpha <= 0.0f){
+      is_dead = true;
+      return;
+    }
+    alpha = (uint8_t)f_alpha;
+    return;
+  }
+
+  inline void draw(sf::RenderTarget& target) const{
+    target.draw(polygon);
+  }
+
+}; //struct PolyDeathAnimation0
 
 
 struct PolyDeathAnimationManager{
-	std::vector<PolyDeathAnimation> anims;
+  std::vector<PolyDeathAnimation> anims;
+  void add_animation(ConvexPolygon polygon){
+    anims.emplace_back(polygon);
+  }
 
-	void add_animation(ConvexPolygon polygon){
-		anims.emplace_back(polygon);
-	}
+  void update(float dt){
+    for (auto& anim : anims){
+      anim.update(dt);
+    }
+    //remove dead anims
+    anims.erase(std::remove_if(anims.begin(), anims.end(),
+      [](const PolyDeathAnimation& anim){return anim.is_dead;}),
+      anims.end());
+  }
 
-	void update(float dt){
-		//TODO: find a better way to remove dead anims
-		// FIXME
-		std::vector<PolyDeathAnimation> alive_anims;
-		for (auto& anim : anims){
-			bool is_alive = anim.update(dt);
-			if (is_alive){
-				alive_anims.emplace_back(std::move(anim));
-			}
-		}
-		anims = alive_anims;
-	}
-
-	void draw(sf::RenderTarget& target) const{
-		for (auto& anim: anims){
-			anim.draw(target);
-		}
-	}
+  void draw(sf::RenderTarget& target) const{
+    for (auto& anim: anims){
+      anim.draw(target);
+    }
+  }
 }; //PolyDeathAnimationManager
+
