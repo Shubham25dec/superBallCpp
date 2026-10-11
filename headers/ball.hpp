@@ -95,6 +95,7 @@ struct Ball{
       result.ball_collides = true;
       result.collision_pos = result1.collision_pos;
       result.collision_obj_color = result1.collision_obj_color;
+      result.collided_poly_index = result1.collided_poly_index;
     }
     auto result2 = _handle_line_collision(lines);
     if (result2.intersects){

@@ -158,7 +158,7 @@ struct ParticleSystemManager{
 
 
 struct PolyDeathAnimation{
-	float animation_speed = 150.f;
+	float animation_speed = 250.f;
 	ConvexPolygon polygon;
 	V2f global_center;
 	
@@ -175,10 +175,11 @@ struct PolyDeathAnimation{
 		for (size_t i=0; i<polygon.getPointCount(); i++){
 			V2f ith = polygon.getInverseTransform().transformPoint(polygon.getPoint(i)); //in global
 			V2f dir = (global_center - ith); //points towards center
-			float DeathThreshold = 5.f;
+			float DeathThreshold = 15.f;
 			if (dir.length() != 0){
 				dir = dir.normalized();
-			}else if (dir.length() <= DeathThreshold){
+			}
+			if (dir.length() <= DeathThreshold){
 				return false;
 			}
 			ith += (dir * animation_speed * dt);
