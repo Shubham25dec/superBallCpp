@@ -19,6 +19,7 @@ typedef struct BallUpdateResult{
   bool ball_dies     = false;
   bool ball_collides = false;
   V2f collision_pos;
+  size_t collided_poly_index;
   sf::Color collision_obj_color;//what color the object which collided with ball was
   //in case of ball dying it maybe color of ball
 }BU_Result;
@@ -68,10 +69,6 @@ struct Ball{
   bool isdead = true;
   sf::CircleShape ball_shape;
 
-  PolyDeathAnimationManager pda_man;
-  //TODO:put this into the game.hpp
-  // FIXME
-
   Ball(V2f a_start_pos={0, 0}, V2f a_velocity={1, 1}, float radius=11, float a_speed = 740,
        sf::Color a_color = sf::Color(255, 165, 0)){
     start_pos = a_start_pos;
@@ -89,7 +86,6 @@ struct Ball{
               std::vector<std::array<V2f, 2>>& lines
             ){
     BallUpdateResult result;
-    pda_man.update(dt);
     if (isdead) return result;//since already dead
     end_pos += (velocity * speed * dt);
     ball_shape.setPosition(end_pos);
@@ -110,7 +106,6 @@ struct Ball{
   }
 
   void draw(sf::RenderWindow& window) const{
-    pda_man.draw(window);
     if (isdead) return;
     window.draw(ball_shape);
 
@@ -147,9 +142,8 @@ struct Ball{
       auto body_color = sf::Color::Black;
       if (collided.is_mortal){
         body_color = sf::Color::White;
-        pda_man.add_animation(collided);//add poly death animation
-        polygons.erase(polygons.begin()+closest_index);
-      }//remove polygon if it is mortal
+        bu_result.collided_poly_index = closest_index;
+      }
       _reflect_from_line(ci_result.line_start, ci_result.line_end);
       start_pos = ci_result.at + velocity * 1.0f;
       end_pos = start_pos;

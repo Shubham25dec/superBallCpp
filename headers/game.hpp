@@ -26,6 +26,7 @@ struct Game{
   AudioManager* audio_man;
   utils::RNG rng;
   ParticleSystemManager particle_system_man;
+  PolyDeathAnimationManager pda_man;
   Settings settings;
 
   utils::TouchInfo touch_info;
@@ -107,20 +108,25 @@ struct Game{
 
     if (settings.particles)
        particle_system_man.draw(window);
+    pda_man.draw(window);
   }
 
 
   void _update(float dt){
-    ParticleSystemManager* psm = nullptr;
     if (settings.particles){
-      psm = &particle_system_man;
       particle_system_man.update(dt);
     }
+    pda_man.update(dt);
     auto result = ball.update(dt, current_level.polygons, current_level.lines);
     if (result.ball_collides){
       _add_particle_system(result.collision_pos,
                            result.collision_obj_color);
       if (settings.sound) audio_man->play_sound("hit");
+      auto polygon = current_level.polygons[result.collided_poly_index];
+      if (polygon.is_mortal){
+        pda_man.add_animation(polygon);
+        current_level.remove_polygon_at(result.collided_poly_index); // remove dead polygon.
+      }
     }
     if (result.ball_dies){
       _add_particle_system(result.collision_pos,

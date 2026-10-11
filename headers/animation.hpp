@@ -3,10 +3,6 @@
 #include "pch.hpp"
 #include "utils.hpp"
 #include "convex_polygon.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/System/Vector2.hpp>
-#include <vector>
-
 
 using V2f = sf::Vector2f;
 
@@ -162,7 +158,7 @@ struct ParticleSystemManager{
 
 
 struct PolyDeathAnimation{
-	float animation_speed = 50.f;
+	float animation_speed = 150.f;
 	ConvexPolygon polygon;
 	V2f global_center;
 	

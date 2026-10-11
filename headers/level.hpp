@@ -35,6 +35,12 @@ struct Level {
       }
       return alive;
   }
+
+  void remove_polygon_at(size_t index){
+      assert(index < polygons.size()); //DEBUG
+      auto poly = polygons[index];
+      polygons.erase(polygons.begin() + index);
+  }
   
 };
 
