@@ -141,9 +141,9 @@ struct Ball{
     if (closest_index != -1){ //collision happend
       auto collided = polygons[closest_index];
       auto body_color = sf::Color::Black;
+      bu_result.collided_poly_index = closest_index;
       if (collided.is_mortal){
         body_color = sf::Color::White;
-        bu_result.collided_poly_index = closest_index;
       }
       _reflect_from_line(ci_result.line_start, ci_result.line_end);
       start_pos = ci_result.at + velocity * 1.0f;
