@@ -6,10 +6,10 @@
 
 using PolyPoints = std::vector<sf::Vector2f>;
 
-#define SOLID_V2F sf::Vector2f(-1.0f, -1.0f)
+constexpr auto SOLID_V2F = sf::Vector2f(-1.0f, -1.0f);
 
-constexpr auto SHAPE_FILL = sf::Color::Green;
-constexpr auto SHAPE_OUT  = sf::Color::Black;
+constexpr auto SHAPE_FILL = sf::Color(200, 207, 255);
+constexpr auto SHAPE_OUT  = sf::Color(50, 50, 50);
 //TODO: TRY DIFFERENT COLORS
 
 
@@ -44,7 +44,7 @@ public:
 
     //return true if point lies inside shape
     bool contains(sf::Vector2f point) const {
-        // Convert to local space so position/rotation/scale are handled
+        //convert to local space so position/rotation/scale are handled
         sf::Vector2f p = getInverseTransform().transformPoint(point);
         const std::size_t n = getPointCount();
         if (n < 3)

@@ -56,6 +56,12 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
       if (const auto* key_press = event->getIf<sf::Event::KeyPressed>()){
         return;
       }
+      if (event->is<sf::Event::FocusLost>()){
+        (void) window.setActive(false);
+      }
+      if (event->is<sf::Event::FocusGained>()){
+        (void) window.setActive(true);
+      }
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         if (touch_info.active) continue;
         touch_info = {utils::V2f(window.mapPixelToCoords(touch->position)), touch->finger, true};
@@ -65,8 +71,13 @@ inline void settings_screen(sf::RenderWindow& window, Settings& settings, const 
           touch_info.active = false;
         }
       }
-    }
+    }//event loop end
 
+    if (!window.hasFocus()){
+      sf::sleep(sf::milliseconds(500));
+      continue;
+    }
+  
     //Rendering
     window.clear(sf::Color(85, 85, 85));
 

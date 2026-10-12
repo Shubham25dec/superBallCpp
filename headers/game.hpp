@@ -65,10 +65,19 @@ struct Game{
     if (settings.music){
       audio_man->start_bg_music();
     }
-
+    float dt;
+    bool keep_running;
     while (window.isOpen()){
-      float dt = clock.restart().asSeconds();
-      _handle_events(window, text_sys.font);
+      dt = clock.restart().asSeconds();
+      keep_running = _handle_events(window, text_sys.font);
+      if (!keep_running){
+        window.close();
+        return;
+      }
+      if (!window.hasFocus()){
+        sf::sleep(sf::milliseconds(500)); //sleep half a second
+        continue;
+      }
       _update(dt);
       //draw
       window.clear(sf::Color(63, 72, 87));
@@ -151,17 +160,25 @@ struct Game{
     }
   }
 
-
-  void _handle_events(sf::RenderWindow&window, const sf::Font& temp_font){
+  //returns false on exit events
+  [[nodiscard]]
+  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font){
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>()) {
-        window.close();
+        return false;
       }
       if (const auto* key_press = event->getIf<sf::Event::KeyPressed>()){
         if (key_press->code == sf::Keyboard::Key::Escape){
-          window.close();
-          exit(0);
+          return false;
         }
+      }
+      if (event->is<sf::Event::FocusLost>()){
+        (void) window.setActive(false); //FIX MAY FAIL ignoring return value
+        audio_man->stop_bg_music();
+      }
+      if (event->is<sf::Event::FocusGained>()){
+        (void) window.setActive(true);
+        if (settings.music) audio_man->start_bg_music();
       }
       //if (event->is<sf::Event::MouseButtonPressed>()){
       //  _on_screen_click_down(V2f(sf::Mouse::getPosition()));
@@ -187,6 +204,7 @@ struct Game{
         }
       }
     }
+    return true;
   }
 
   //return true if we should continue
