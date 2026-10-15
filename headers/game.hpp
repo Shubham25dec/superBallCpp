@@ -247,6 +247,7 @@ struct Game{
       _load_previous_level();
     }
     if (temp_setting_btn.is_touched(pos)){
+      audio_man->bg_music.pause();
       settings_screen(window, settings, temp_font);
       _apply_updated_settings();
     }
@@ -300,7 +301,7 @@ struct Game{
   }
 
   void _apply_updated_settings(){
-    printf("TODO: apply new settings: eg music toggled or AA\n");
+    //("TODO: apply new settings: eg music toggled or AA\n");
     if (settings.music) audio_man->start_bg_music();
     else audio_man->stop_bg_music();
   }

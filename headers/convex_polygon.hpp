@@ -9,7 +9,7 @@ using PolyPoints = std::vector<sf::Vector2f>;
 constexpr auto SOLID_V2F = sf::Vector2f(-1.0f, -1.0f);
 
 constexpr auto SHAPE_FILL = sf::Color(200, 207, 255);
-constexpr auto SHAPE_OUT  = sf::Color(50, 50, 50);
+constexpr auto SHAPE_OUT  = sf::Color(10, 10, 10);
 //TODO: TRY DIFFERENT COLORS
 
 
