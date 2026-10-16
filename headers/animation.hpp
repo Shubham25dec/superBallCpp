@@ -218,10 +218,10 @@ struct PolySpawnAnimation{
 	Level* level;
 	sf::Clock clock;
 	const float default_time_del = 0.2f;
-	size_t cur_max_id = 0;
+	int8_t cur_max_id = -1;
 	float time_del = default_time_del; //delay before drawing next polygon (in secs)
-	float et = 0.f; //elapsed time
-	const float divisor = 1.1; //divide time_del by this amount for next polygon each time. This causes time_del
+	float et = 0.f;
+	const float divisor = 1.5; //divide time_del by this amount for next polygon each time. This causes time_del
 	// to be reduced after drawing each polygon
 	// so the subsequent polygons drawn faster and faster
 	bool is_done = false;//whether animation is complete
@@ -231,29 +231,34 @@ struct PolySpawnAnimation{
 
 	void draw(sf::RenderTarget& target) const{
 		if (is_done) return;
-		for (size_t i=0; i<=cur_max_id; i++){
+		if (cur_max_id == -1) return;
+		for (size_t i=0; i<=static_cast<size_t>(cur_max_id); i++){
 			target.draw(level->polygons[i]);
 		}
 	}
 
-	void update(float dt){
-		if (is_done) return;
+	//return true if a new poly was added for draw
+	bool update(float dt){
+		if (is_done) return false;
 		et += clock.restart().asSeconds();
 		if (et >= time_del){
 			et = 0.f;
 			cur_max_id += 1;
 			time_del /= divisor;
-			if (cur_max_id >= level->polygons.size()){
+			if (static_cast<size_t>(cur_max_id) >= level->polygons.size()){
 				cur_max_id -= 1;
 				is_done = true;
+			}else{
+				return true;
 			}
 		}
+		return false;
 	}
 
 	void reset(Level* a_level){
 		time_del = default_time_del;
 		is_done = false;
-		cur_max_id = 0;
+		cur_max_id = -1;
 		et = 0.f;
 		level = a_level;
 		clock.restart();

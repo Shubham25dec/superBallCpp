@@ -100,6 +100,9 @@ struct Game{
   }
   
   void _draw(sf::RenderWindow& window){
+    if (settings.particles)
+       particle_system_man.draw(window);
+    pda_man.draw(window);
     ps_anim.draw(window);
     if (!ps_anim.is_done) return;
     
@@ -121,21 +124,21 @@ struct Game{
       }
       window.draw(utils::makeCircle(11.0f, ball.start_pos));
     }
-
-    if (settings.particles)
-       particle_system_man.draw(window);
-    pda_man.draw(window);
+    
   }
 
 
   void _update(float dt){
-    ps_anim.update(dt);
-    if (!ps_anim.is_done) return;
-    
     if (settings.particles){
       particle_system_man.update(dt);
     }
     pda_man.update(dt);
+    bool was_added = ps_anim.update(dt);
+    if (was_added && settings.sound){
+      audio_man->play_sound("hit");
+    }
+    if (!ps_anim.is_done) return;
+    
     auto result = ball.update(dt, current_level.polygons, current_level.lines);
     if (result.ball_collides){
       _add_particle_system(result.collision_pos,
@@ -163,6 +166,7 @@ struct Game{
         //FIXME since get_live_poly_count iterates over polygons, we can count it somewhere else where we already iterating for eg drawing.
         printf("--- Level %zu complete ---\n", levelno);
         _load_next_level();
+        ps_anim.reset(&current_level); //only reset spawn animation when a level completes!
         return;
       }
       _reset_level();
@@ -220,15 +224,12 @@ struct Game{
 
 
   void _on_screen_click_down(sf::Vector2f pos){
-    if (!ps_anim.is_done){
-      ps_anim.is_done = true;
-    }
     if (ball_state == MOVING){
       //triggers 'if' block below
       // start again if we touch while ball moving
       _reset_level();
     }
-    if (ball_state == UNBORN){
+    if (ball_state == UNBORN && ps_anim.is_done){
       if (_ball_spawning_inside_polygon(pos)){
         printf("cannot spawn ball inside polygon\n");
         return;//dont spawn inside
@@ -278,7 +279,6 @@ struct Game{
 
   void _load_current_level(void){
     current_level = gameLevels[levelno];
-    ps_anim.reset(&current_level);
   }
 
   void _load_next_level(void){
