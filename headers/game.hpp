@@ -27,6 +27,8 @@ struct Game{
   utils::RNG rng;
   ParticleSystemManager particle_system_man;
   PolyDeathAnimationManager pda_man;
+  PolySpawnAnimation ps_anim;
+  
   Settings settings;
 
   utils::TouchInfo touch_info;
@@ -42,6 +44,7 @@ struct Game{
   
   Game(sf::RenderWindow& window, AudioManager* a_audio_man):current_level(gameLevels[levelno]),
     particle_system_man(&rng),
+    ps_anim(&current_level),
     temp_nxt_btn("next", {window.getSize().x-window.getSize().x/6.f, window.getSize().y-window.getSize().y/5.f}),
     temp_pre_btn("prev", {window.getSize().x/36.f, window.getSize().y-window.getSize().y/5.f}),
     temp_setting_btn("settings", {window.getSize().x/2.f-50, window.getSize().y-window.getSize().y/5.f})
@@ -61,7 +64,7 @@ struct Game{
     sf::Clock clock;
     utils::FpsVusaliser fps_viz("font.ttf", 20);
     utils::TextSystem text_sys("font.ttf", 20);
-
+    
     if (settings.music){
       audio_man->start_bg_music();
     }
@@ -69,7 +72,7 @@ struct Game{
     bool keep_running;
     while (window.isOpen()){
       dt = clock.restart().asSeconds();
-      keep_running = _handle_events(window, text_sys.font);
+      keep_running = _handle_events(window, text_sys.font, ps_anim.is_done);
       if (!keep_running){
         window.close();
         return;
@@ -78,6 +81,12 @@ struct Game{
         sf::sleep(sf::milliseconds(500)); //sleep half a second
         continue;
       }
+      if (!ps_anim.is_done){
+        ps_anim.draw(window);
+        ps_anim.update(dt);
+        continue;
+      }
+      
       _update(dt);
       //draw
       window.clear(sf::Color(63, 72, 87));
@@ -162,7 +171,7 @@ struct Game{
 
   //returns false on exit events
   [[nodiscard]]
-  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font){
+  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font, bool handle_touch_events=true){
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>()) {
         return false;
@@ -185,6 +194,8 @@ struct Game{
       //}else if (event->is<sf::Event::MouseButtonReleased>()){
        // _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
       //}
+      if (!handle_touch_events) continue;
+      
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         V2f pos = V2f(window.mapPixelToCoords((touch->position)));
         if (touch_info.active) continue; //a finger is already active do not register another
@@ -263,21 +274,22 @@ struct Game{
 
   void _load_current_level(void){
     current_level = gameLevels[levelno];
+    ps_anim.reset(&current_level);
   }
 
-  void _load_next_level(size_t delta=1){
-    levelno += delta;
+  void _load_next_level(void){
+    levelno += 1;
     if (levelno >= gameLevels.size()){
       levelno = gameLevels.size() - 1;
     }
-    if (levelno <= 0)
-      levelno = 0;
-
     _reset_level();
   }
   
   void _load_previous_level(){
-    _load_next_level(-1);
+    if (levelno != 0) {
+      levelno -= 1;
+    }
+    _reset_level();
   }
 
 
