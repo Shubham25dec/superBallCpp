@@ -81,11 +81,6 @@ struct Game{
         sf::sleep(sf::milliseconds(500)); //sleep half a second
         continue;
       }
-      if (!ps_anim.is_done){
-        ps_anim.draw(window);
-        ps_anim.update(dt);
-        continue;
-      }
       
       _update(dt);
       //draw
@@ -105,6 +100,9 @@ struct Game{
   }
   
   void _draw(sf::RenderWindow& window){
+    ps_anim.draw(window);
+    if (!ps_anim.is_done) return;
+    
     ball.draw(window);
     for (auto& poly: current_level.polygons){
       if (settings.shape_shadows) 
@@ -131,6 +129,9 @@ struct Game{
 
 
   void _update(float dt){
+    ps_anim.update(dt);
+    if (!ps_anim.is_done) return;
+    
     if (settings.particles){
       particle_system_man.update(dt);
     }
@@ -194,7 +195,6 @@ struct Game{
       //}else if (event->is<sf::Event::MouseButtonReleased>()){
        // _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
       //}
-      if (!handle_touch_events) continue;
       
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         V2f pos = V2f(window.mapPixelToCoords((touch->position)));
@@ -218,8 +218,11 @@ struct Game{
     return true;
   }
 
-  //return true if we should continue
+
   void _on_screen_click_down(sf::Vector2f pos){
+    if (!ps_anim.is_done){
+      ps_anim.is_done = true;
+    }
     if (ball_state == MOVING){
       //triggers 'if' block below
       // start again if we touch while ball moving
@@ -238,7 +241,8 @@ struct Game{
   
 
   void _on_screen_click_up(sf::Vector2f pos, sf::RenderWindow& window, const sf::Font& temp_font){
-    if (ball_state == MAKING){
+    //ensure spawn animation is completed
+    if (ball_state == MAKING && ps_anim.is_done){
       ball_state = MOVING;
       ball.velocity = pos - ball.start_pos;
       if (ball.velocity.length() != 0){

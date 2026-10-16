@@ -1,3 +1,5 @@
 #FIXED the bug related to _load_previous_level() method in game.hpp. The bug was causing an underflow of an unsigned type (size_t), thus setting the level to [max] when current level is 0 and user presses <previous> button.
 
+#ADDED new polygon spawn animation as the start of each level
+
 

@@ -4,8 +4,6 @@
 #include "pch.hpp"
 #include "utils.hpp"
 #include "convex_polygon.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
-#include <SFML/Window/Keyboard.hpp>
 
 using V2f = sf::Vector2f;
 
@@ -219,9 +217,10 @@ struct PolyDeathAnimationManager{
 struct PolySpawnAnimation{
 	Level* level;
 	sf::Clock clock;
-	const float default_time_del = 0.5f;
+	const float default_time_del = 0.2f;
 	size_t cur_max_id = 0;
 	float time_del = default_time_del; //delay before drawing next polygon (in secs)
+	float et = 0.f; //elapsed time
 	const float divisor = 1.1; //divide time_del by this amount for next polygon each time. This causes time_del
 	// to be reduced after drawing each polygon
 	// so the subsequent polygons drawn faster and faster
@@ -231,6 +230,7 @@ struct PolySpawnAnimation{
 	}
 
 	void draw(sf::RenderTarget& target) const{
+		if (is_done) return;
 		for (size_t i=0; i<=cur_max_id; i++){
 			target.draw(level->polygons[i]);
 		}
@@ -238,8 +238,9 @@ struct PolySpawnAnimation{
 
 	void update(float dt){
 		if (is_done) return;
-		float et = clock.restart().asSeconds();
+		et += clock.restart().asSeconds();
 		if (et >= time_del){
+			et = 0.f;
 			cur_max_id += 1;
 			time_del /= divisor;
 			if (cur_max_id >= level->polygons.size()){
@@ -253,6 +254,7 @@ struct PolySpawnAnimation{
 		time_del = default_time_del;
 		is_done = false;
 		cur_max_id = 0;
+		et = 0.f;
 		level = a_level;
 		clock.restart();
 	}
