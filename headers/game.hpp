@@ -69,6 +69,7 @@ struct Game{
 
     //set view so it properly resizes regardless of the screen res
     game_view.setSize(VIEW_SIZE);
+    game_view.setCenter(VIEW_SIZE/2.f);
     float scale = std::min(win_size.x/VIEW_SIZE.x, win_size.y/VIEW_SIZE.y);
     V2f wld_size = VIEW_SIZE * scale;
     float vp_width = wld_size.x/win_size.x;
