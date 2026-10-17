@@ -79,7 +79,6 @@ struct Game{
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
     window.setView(game_view);
-    
   }
 
   void mainloop(sf::RenderWindow& window){
