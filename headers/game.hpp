@@ -8,7 +8,14 @@
 #include "button.hpp"
 #include "animation.hpp"
 #include "settings.hpp"
+#include <SFML/Window/WindowHandle.hpp>
+#include <algorithm>
 
+
+//all polygon vertices are based on this size, to
+// make sure they remain in this exact ratio,
+// we a sf::View of this size
+inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1600.f};
 
 typedef enum BallState{
   MOVING,
@@ -28,6 +35,8 @@ struct Game{
   ParticleSystemManager particle_system_man;
   PolyDeathAnimationManager pda_man;
   PolySpawnAnimation ps_anim;
+
+  sf::View game_view;
   
   Settings settings;
 
@@ -57,6 +66,18 @@ struct Game{
       
     _load_current_level();
     win_size = window.getSize();
+
+    //set view so it properly resizes regardless of the screen res
+    game_view.setSize(VIEW_SIZE);
+    float scale = std::min(win_size.x/VIEW_SIZE.x, win_size.y/VIEW_SIZE.y);
+    V2f wld_size = VIEW_SIZE * scale;
+    float vp_width = wld_size.x/win_size.x;
+    float vp_height = wld_size.y/win_size.y;
+    float left = (1 - vp_width) / 2;
+    float top = 0;
+    const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
+    game_view.setViewport(view_rect);
+    window.setView(game_view);
     
   }
 
@@ -64,12 +85,13 @@ struct Game{
     sf::Clock clock;
     utils::FpsVusaliser fps_viz("font.ttf", 20);
     utils::TextSystem text_sys("font.ttf", 20);
-    
+  
     if (settings.music){
       audio_man->start_bg_music();
     }
     float dt;
     bool keep_running;
+    
     while (window.isOpen()){
       dt = clock.restart().asSeconds();
       keep_running = _handle_events(window, text_sys.font, ps_anim.is_done);
@@ -201,21 +223,21 @@ struct Game{
       //}
       
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
-        V2f pos = V2f(window.mapPixelToCoords((touch->position)));
+        V2f pos = V2f(window.mapPixelToCoords(touch->position, game_view));
         if (touch_info.active) continue; //a finger is already active do not register another
         touch_info = {pos, touch->finger, true};
         _on_screen_click_down(pos);
       }
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
         if (touch->finger == touch_info.fingerid) {//ensure same finger event 
-          auto pos = V2f(window.mapPixelToCoords((touch->position)));
+          auto pos = V2f(window.mapPixelToCoords(touch->position, game_view));
           _on_screen_click_up(pos, window, temp_font);
           touch_info.active = false;
         }
       }
       if (const auto* touch = event->getIf<sf::Event::TouchMoved>()){
         if (touch->finger == touch_info.fingerid){
-          touch_info.pos = V2f(window.mapPixelToCoords(touch->position));
+          touch_info.pos = V2f(window.mapPixelToCoords(touch->position, game_view));
         }
       }
     }
