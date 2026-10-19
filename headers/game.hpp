@@ -36,6 +36,7 @@ struct Game{
   PolySpawnAnimation ps_anim;
 
   sf::View game_view;
+  sf::View ui_view; //pixel based view for buttons, text etc
   
   Settings settings;
 
@@ -65,9 +66,14 @@ struct Game{
     audio_man->load_sound("sounds/touch.wav", "hit");
       
     _load_current_level();
+    _update_views(window);
+  }
+
+  //set view so it properly resizes regardless of the screen res
+  void _update_views(sf::RenderWindow& window){
     win_size = window.getSize();
 
-    //set view so it properly resizes regardless of the screen res
+    //game view: fixed 720x1600 world, uniformly scaled and centered (letterboxed)
     game_view.setSize(VIEW_SIZE);
     game_view.setCenter(VIEW_SIZE/2.f);
     float scale = std::min(win_size.x/VIEW_SIZE.x, win_size.y/VIEW_SIZE.y);
@@ -78,6 +84,12 @@ struct Game{
     float top = (1-vp_height) /2.f;
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
+
+    //ui view: 1 unit = 1 real pixel, covers the whole window
+    ui_view.setSize(V2f(win_size));
+    ui_view.setCenter(V2f(win_size)/2.f);
+    ui_view.setViewport(sf::FloatRect({0.f, 0.f}, {1.f, 1.f}));
+
     window.setView(game_view);
   }
 
@@ -107,7 +119,10 @@ struct Game{
       _update(dt);
       //draw
       window.clear(sf::Color(63, 72, 87));
+      window.setView(game_view); //game is drawn in world space
       _draw(window);
+
+      window.setView(ui_view); //everything below is drawn in real pixels
       if (settings.show_fps){
         fps_viz.show_fps(window, {10.0f, 10.0f});
       }
@@ -181,8 +196,9 @@ struct Game{
       return;
     }
     if (ball.isdead && ball_state != MAKING) ball_state = UNBORN;
-    if (!ball.isdead && (ball.end_pos.x > win_size.x || ball.end_pos.x < 0 ||
-       ball.end_pos.y > win_size.y || ball.end_pos.y < 0)){
+    //ball.end_pos is in world space so compare against VIEW_SIZE, not the pixel win_size
+    if (!ball.isdead && (ball.end_pos.x > VIEW_SIZE.x || ball.end_pos.x < 0 ||
+       ball.end_pos.y > VIEW_SIZE.y || ball.end_pos.y < 0)){
       _add_particle_system(ball.end_pos, ball.ball_shape.getFillColor());
       if (current_level.get_alive_poly_count() == 0){
         //FIXME since get_live_poly_count iterates over polygons, we can count it somewhere else where we already iterating for eg drawing.
@@ -231,7 +247,8 @@ struct Game{
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
         if (touch->finger == touch_info.fingerid) {//ensure same finger event 
           auto pos = V2f(window.mapPixelToCoords(touch->position, game_view));
-          _on_screen_click_up(pos, window, temp_font);
+          V2f pixel_pos = V2f(touch->position); //raw pixels, needed by ui buttons
+          _on_screen_click_up(pos, pixel_pos, window, temp_font);
           touch_info.active = false;
         }
       }
@@ -252,6 +269,10 @@ struct Game{
       _reset_level();
     }
     if (ball_state == UNBORN && ps_anim.is_done){
+      //touch landed in the letterbox bars (outside the world), ignore
+      if (pos.x < 0 || pos.x > VIEW_SIZE.x || pos.y < 0 || pos.y > VIEW_SIZE.y){
+        return;
+      }
       if (_ball_spawning_inside_polygon(pos)){
         printf("cannot spawn ball inside polygon\n");
         return;//dont spawn inside
@@ -263,7 +284,8 @@ struct Game{
   }
   
 
-  void _on_screen_click_up(sf::Vector2f pos, sf::RenderWindow& window, const sf::Font& temp_font){
+  //pos is in world space (game), pixel_pos is in real screen pixels (ui)
+  void _on_screen_click_up(sf::Vector2f pos, sf::Vector2f pixel_pos, sf::RenderWindow& window, const sf::Font& temp_font){
     //ensure spawn animation is completed
     if (ball_state == MAKING && ps_anim.is_done){
       ball_state = MOVING;
@@ -278,13 +300,13 @@ struct Game{
     }
     //TODO:SSSSSSSSSSSSSSSSSSSSSSSS Fix buttons later
     // 
-    if (temp_nxt_btn.is_touched(pos)){
+    if (temp_nxt_btn.is_touched(pixel_pos)){
       _load_next_level();
     }
-    if (temp_pre_btn.is_touched(pos)){
+    if (temp_pre_btn.is_touched(pixel_pos)){
       _load_previous_level();
     }
-    if (temp_setting_btn.is_touched(pos)){
+    if (temp_setting_btn.is_touched(pixel_pos)){
       audio_man->bg_music.pause();
       settings_screen(window, settings, temp_font);
       _apply_updated_settings();
