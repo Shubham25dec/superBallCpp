@@ -62,3 +62,38 @@ struct AudioManager{
   }
   
 };//AudioManager
+
+
+
+//Plays 8 notes in increasing order, when the notes are played plays them in reverse and so on..
+struct PianoNotePlayer{
+  AudioManager* audio_man;
+  const size_t MAX_ID = 8;
+  const size_t MIN_ID = 1;
+  int note_delta = 1; //whether notes go up or down 1 meansnup -1 down
+  size_t current = MIN_ID;
+  PianoNotePlayer(AudioManager* a_audio_man):audio_man(a_audio_man){
+    for (size_t i=1; i<9; i++){
+      auto name = std::to_string(i);
+      audio_man->load_sound("sounds/"+name+".ogg", name);
+    }
+  }
+
+  void play_next_note(){
+    auto id = std::to_string(current);
+    audio_man->play_sound(id);
+    current += note_delta;
+    if (current > MAX_ID){
+      current -= 1;
+      note_delta *= -1;
+    }else if (current < MIN_ID){
+      current += 1;
+      note_delta *= -1;
+    }
+  }
+
+  void reset_note(){
+    current = 1;
+  }
+  
+}; //PianoNotePlayer

@@ -8,8 +8,6 @@
 #include "button.hpp"
 #include "animation.hpp"
 #include "settings.hpp"
-#include <SFML/Window/WindowHandle.hpp>
-#include <algorithm>
 
 
 //all polygon vertices are based on this size, to
@@ -31,6 +29,7 @@ struct Game{
   BallState ball_state = UNBORN;
   sf::Vector2u win_size;
   AudioManager* audio_man;
+  PianoNotePlayer piano_np;
   utils::RNG rng;
   ParticleSystemManager particle_system_man;
   PolyDeathAnimationManager pda_man;
@@ -52,13 +51,14 @@ struct Game{
   // TODO:SSSSSSSSSSSSSSSSSSS
   
   Game(sf::RenderWindow& window, AudioManager* a_audio_man):current_level(gameLevels[levelno]),
+    audio_man(a_audio_man),
+    piano_np(audio_man),
     particle_system_man(&rng),
     ps_anim(&current_level),
     temp_nxt_btn("next", {window.getSize().x-window.getSize().x/6.f, window.getSize().y-window.getSize().y/5.f}),
     temp_pre_btn("prev", {window.getSize().x/36.f, window.getSize().y-window.getSize().y/5.f}),
     temp_setting_btn("settings", {window.getSize().x/2.f-50, window.getSize().y-window.getSize().y/5.f})
   {
-    audio_man = a_audio_man;
 
     audio_man->load_bg_music("sounds/bg_music.mp3");
     audio_man->load_sound("sounds/die.mp3", "die");
@@ -165,7 +165,7 @@ struct Game{
     if (result.ball_collides){
       _add_particle_system(result.collision_pos,
                            result.collision_obj_color);
-      if (settings.sound) audio_man->play_sound("hit");
+      if (settings.sound) piano_np.play_next_note();//audio_man->play_sound("hit");
       auto polygon = current_level.polygons[result.collided_poly_index];
       if (polygon.is_mortal){
         pda_man.add_animation(polygon);
@@ -297,6 +297,7 @@ struct Game{
     ball.isdead = true;
     ball_state = UNBORN;
     _load_current_level();
+    piano_np.reset_note();
   }
 
   void _load_current_level(void){
