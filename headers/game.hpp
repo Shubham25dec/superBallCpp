@@ -133,7 +133,7 @@ struct Game{
       if (settings.show_fps){
         fps_viz.show_fps(window, {10.0f, 10.0f});
       }
-      text_sys.show_text(window, "touch:"+std::to_string(touch_info.pos.x)+std::to_string(touch_info.pos.y), {10.0f, 50.0f});
+      text_sys.show_text(window, "touch:"+std::to_string(touch_info.pos.x)+", "+std::to_string(touch_info.pos.y), {10.0f, 50.0f});
       sf::CircleShape touch_c(5.f);
       touch_c.setPosition(touch_info.pos);
       window.draw(touch_c);
@@ -258,7 +258,7 @@ struct Game{
       if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
         if (touch->finger == touch_info.fingerid) {//ensure same finger event 
           auto pos = V2f(window.mapPixelToCoords(touch->position, game_view));
-          V2f pixel_pos = V2f(touch->position); //raw pixels, needed by ui buttons
+          V2f pixel_pos = V2f(window.mapPixelToCoords(touch->position, window.getDefaultView())); //raw pixels, needed by ui buttons
           _on_screen_click_up(pos, pixel_pos, window, temp_font);
           touch_info.active = false;
         }
@@ -386,6 +386,8 @@ struct Game{
       dir *= -3.0f * utils::distance(ball.start_pos, m_pos);
     }
     auto end = dir + m_pos;
+    end.x = std::max(0.f, std::min(end.x, VIEW_SIZE.x));
+    end.y = std::max(0.f, std::min(end.y, VIEW_SIZE.y));
     return end;
   }
 

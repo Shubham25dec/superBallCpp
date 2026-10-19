@@ -65,20 +65,7 @@ inline const std::vector<LevelData> gameLevels = {
 
 
 // ############### level 2 ###############
-{
-    // lvl 2 polygons
-    {
-        {V2f(180.f, 357.f), V2f(280.f, 405.f), V2f(480.f, 405.f), V2f(480.f, 309.f), V2f(280.f, 309.f)},
-        {V2f(180.f, 453.f), V2f(280.f, 501.f), V2f(280.f, 693.f), V2f(180.f, 693.f)},
-        {V2f(430.f, 501.f), V2f(480.f, 453.f), V2f(480.f, 693.f), V2f(380.f, 693.f), V2f(380.f, 549.f), V2f(430.f, 549.f)},
-        {V2f(230.f, 789.f), V2f(330.f, 837.f), V2f(430.f, 789.f), V2f(430.f, 933.f), V2f(230.f, 933.f)},
-    },
-
-    // lvl 2 lines
-    {
-    }
-},
-
+// removed because contained convex polygons
 
 // ############### level 3 ###############
 {
