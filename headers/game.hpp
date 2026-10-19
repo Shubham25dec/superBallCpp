@@ -8,6 +8,8 @@
 #include "button.hpp"
 #include "animation.hpp"
 #include "settings.hpp"
+#include <SFML/Graphics/CircleShape.hpp>
+#include <string>
 
 
 //all polygon vertices are based on this size, to
@@ -36,7 +38,7 @@ struct Game{
   PolySpawnAnimation ps_anim;
 
   sf::View game_view;
-  sf::View ui_view; //pixel based view for buttons, text etc
+  //sf::View ui_view; //pixel based view for buttons, text etc
   
   Settings settings;
 
@@ -86,9 +88,9 @@ struct Game{
     game_view.setViewport(view_rect);
 
     //ui view: 1 unit = 1 real pixel, covers the whole window
-    ui_view.setSize(V2f(win_size));
-    ui_view.setCenter(V2f(win_size)/2.f);
-    ui_view.setViewport(sf::FloatRect({0.f, 0.f}, {1.f, 1.f}));
+    //ui_view.setSize(V2f(win_size));
+    //ui_view.setCenter(V2f(win_size)/2.f);
+    //ui_view.setViewport(sf::FloatRect({0.f, 0.f}, {1.f, 1.f}));
 
     window.setView(game_view);
   }
@@ -126,10 +128,15 @@ struct Game{
 
       _draw(window);
 
-      window.setView(ui_view); //everything below is drawn in real pixels
+      //window.setView(ui_view); //everything below is drawn in real pixels
+      window.setView(window.getDefaultView());
       if (settings.show_fps){
         fps_viz.show_fps(window, {10.0f, 10.0f});
       }
+      text_sys.show_text(window, "touch:"+std::to_string(touch_info.pos.x)+std::to_string(touch_info.pos.y), {10.0f, 50.0f});
+      sf::CircleShape touch_c(5.f);
+      touch_c.setPosition(touch_info.pos);
+      window.draw(touch_c);
       text_sys.show_text(window, "level: "+ std::to_string(levelno), {10.0f, 30.0f});
       
       temp_nxt_btn.draw(window);
@@ -299,7 +306,7 @@ struct Game{
         ball.isdead = false;
       }else{
         ball_state = UNBORN;
-        printf("untouched the same pos, zero vector cannot be normalized!\n");
+       printf("untouched the same pos, zero vector cannot be normalized!\n");
       }
     }
     //TODO:SSSSSSSSSSSSSSSSSSSSSSSS Fix buttons later
