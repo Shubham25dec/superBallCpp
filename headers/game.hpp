@@ -74,8 +74,8 @@ struct Game{
     V2f wld_size = VIEW_SIZE * scale;
     float vp_width = wld_size.x/win_size.x;
     float vp_height = wld_size.y/win_size.y;
-    float left = (1 - vp_width) / 2;
-    float top = 0;
+    float left = (1 - vp_width) / 2.f;
+    float top = (1-vp_height) /2.f;
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
     window.setView(game_view);
