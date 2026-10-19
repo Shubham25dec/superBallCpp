@@ -13,7 +13,7 @@
 //all polygon vertices are based on this size, to
 // make sure they remain in this exact ratio,
 // we a sf::View of this size
-inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1600.f};
+inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1200.f};
 
 typedef enum BallState{
   MOVING,
@@ -73,7 +73,7 @@ struct Game{
   void _update_views(sf::RenderWindow& window){
     win_size = window.getSize();
 
-    //game view: fixed 720x1600 world, uniformly scaled and centered (letterboxed)
+    //game view: fixed 720x1200 world, uniformly scaled and centered (letterboxed)
     game_view.setSize(VIEW_SIZE);
     game_view.setCenter(VIEW_SIZE/2.f);
     float scale = std::min(win_size.x/VIEW_SIZE.x, win_size.y/VIEW_SIZE.y);
@@ -81,7 +81,7 @@ struct Game{
     float vp_width = wld_size.x/win_size.x;
     float vp_height = wld_size.y/win_size.y;
     float left = (1 - vp_width) / 2.f;
-    float top = (1-vp_height) /2.f;
+    float top = 0.f; //(1-vp_height) /2.f;
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
 
@@ -120,6 +120,10 @@ struct Game{
       //draw
       window.clear(sf::Color(63, 72, 87));
       window.setView(game_view); //game is drawn in world space
+      sf::RectangleShape world_bg(VIEW_SIZE); //default position is (0,0)
+      world_bg.setFillColor(sf::Color(40, 46, 58)); //different from the clear color
+      window.draw(world_bg);
+
       _draw(window);
 
       window.setView(ui_view); //everything below is drawn in real pixels
