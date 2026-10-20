@@ -55,7 +55,6 @@ inline const std::vector<LevelData> gameLevels = {
         {V2f(330.f, 405.f), V2f(530.f, 405.f), V2f(530.f, 549.f), V2f(330.f, 549.f)},
         {V2f(80.f, 453.f), V2f(80.f, 693.f), V2f(180.f, 693.f), V2f(180.f, 453.f)},
         {V2f(330.f, 741.f), V2f(330.f, 933.f), V2f(430.f, 933.f), V2f(430.f, 741.f)},
-        {V2f(130.f, 165.f), V2f(80.f, 309.f), V2f(130.f, 405.f), V2f(130.f, 165.f)},
     },
 
     // lvl 1 lines

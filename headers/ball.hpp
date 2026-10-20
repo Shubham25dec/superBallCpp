@@ -184,16 +184,17 @@ struct Ball{
 
   LI_Result _collides_with_polygon(const ConvexPolygon& poly){
     LI_Result result;
-    size_t pc = poly.getPointCount();
+    size_t begin = poly.is_mortal ? 0: 1;
+    size_t pc = poly.sharp_poly_points->size() - begin;//poly.getPointCount();
     LI_Result ci_result;
     float min_dist = 999999999999.f;
-    for (size_t x=0; x<pc; x++){
-      V2f A = poly.getPoint(x);
+    for (size_t x=begin; x<pc; x++){
+      V2f A = poly.sharp_poly_points->at(x);
       V2f B;
       if (x == pc-1){//last vertex
-        B = poly.getPoint(0);
+        B = poly.sharp_poly_points->at(begin);
       }else{
-        B = poly.getPoint(x+1);
+        B = poly.sharp_poly_points->at(x+1);
       }
       result = lines_intersect(start_pos, end_pos, A, B);
       if (!result.intersects) continue;
