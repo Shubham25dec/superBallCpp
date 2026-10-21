@@ -25,7 +25,11 @@ public:
     // that is because of the rounded corner
     // rounded corner adds more points to polygon, but they dont necessarily need to be considered during
     // collision check!, we check with the original vertices (without rounded corner) and draw with rounded corner.
-    
+
+
+    //NOTE: Ensure that PolyPoints always pass a convex
+    // polygon. a concave polygon would break rendering
+    // and physics of the game!
     ConvexPolygon(const PolyPoints& a_points): sharp_poly_points(&a_points)
     {
         if (a_points[0] == SOLID_V2F){
