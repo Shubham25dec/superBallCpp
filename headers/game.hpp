@@ -8,14 +8,14 @@
 #include "button.hpp"
 #include "animation.hpp"
 #include "settings.hpp"
-#include <SFML/Graphics/CircleShape.hpp>
-#include <string>
-
 
 //all polygon vertices are based on this size, to
 // make sure they remain in this exact ratio,
 // we a sf::View of this size
 inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1200.f};
+
+inline bool AIM_ASSIST = ON;
+inline constexpr float ASST_THRESHOLD = 10.f; //a diff of this many pixels triggers aim assistant.
 
 typedef enum BallState{
   MOVING,
@@ -38,7 +38,6 @@ struct Game{
   PolySpawnAnimation ps_anim;
 
   sf::View game_view;
-  //sf::View ui_view; //pixel based view for buttons, text etc
   
   Settings settings;
 
@@ -87,11 +86,6 @@ struct Game{
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
 
-    //ui view: 1 unit = 1 real pixel, covers the whole window
-    //ui_view.setSize(V2f(win_size));
-    //ui_view.setCenter(V2f(win_size)/2.f);
-    //ui_view.setViewport(sf::FloatRect({0.f, 0.f}, {1.f, 1.f}));
-
     window.setView(game_view);
   }
 
@@ -108,7 +102,7 @@ struct Game{
     
     while (window.isOpen()){
       dt = clock.restart().asSeconds();
-      keep_running = _handle_events(window, text_sys.font, ps_anim.is_done);
+      keep_running = _handle_events(window, text_sys.font);
       if (!keep_running){
         window.close();
         return;
@@ -181,7 +175,7 @@ struct Game{
       particle_system_man.update(dt);
     }
     pda_man.update(dt);
-    bool was_added = ps_anim.update(dt);
+    bool was_added = ps_anim.update();
     if (was_added && settings.sound){
       audio_man->play_sound("hit");
     }
@@ -225,7 +219,7 @@ struct Game{
 
   //returns false on exit events
   [[nodiscard]]
-  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font, bool handle_touch_events=true){
+  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font){
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>()) {
         return false;
@@ -243,11 +237,24 @@ struct Game{
         (void) window.setActive(true);
         if (settings.music) audio_man->start_bg_music();
       }
-      //if (event->is<sf::Event::MouseButtonPressed>()){
-      //  _on_screen_click_down(V2f(sf::Mouse::getPosition()));
-      //}else if (event->is<sf::Event::MouseButtonReleased>()){
-       // _on_screen_click_up(V2f(sf::Mouse::getPosition()), window, temp_font);
-      //}
+
+      //NOTE temporary...
+      auto m_pos = sf::Mouse::getPosition();
+      if (event->is<sf::Event::MouseButtonPressed>()){
+        if (touch_info.active) continue;
+        touch_info = {V2f(m_pos), 0, true};
+        _on_screen_click_down(V2f(m_pos));
+      }
+      if (event->is<sf::Event::MouseButtonReleased>()){
+        auto pos = V2f(window.mapPixelToCoords(m_pos, game_view));
+        auto pixel_pos = V2f(window.mapPixelToCoords( m_pos, window.getDefaultView()));
+        _on_screen_click_up(pos, pixel_pos, window, temp_font);
+        touch_info.active = false;
+      }
+      if (event->is<sf::Event::MouseMoved>()){
+        touch_info.pos = V2f(window.mapPixelToCoords(m_pos, game_view));
+      }
+      //NOTE temporary block above
       
       if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
         V2f pos = V2f(window.mapPixelToCoords(touch->position, game_view));
@@ -380,14 +387,24 @@ struct Game{
   
   sf::Vector2f _get_selection_arrow_end(){
     auto m_pos = touch_info.pos;
-    auto dir =  V2f(m_pos) - ball.start_pos;
+    auto dir   = V2f(m_pos) - ball.start_pos;
     if (dir.length() > 0) {
       dir = dir.normalized();
       dir *= -3.0f * utils::distance(ball.start_pos, m_pos);
     }
     auto end = dir + m_pos;
+    //cap the arrow to be within view
     end.x = std::max(0.f, std::min(end.x, VIEW_SIZE.x));
     end.y = std::max(0.f, std::min(end.y, VIEW_SIZE.y));
+
+    //AIM_ASSIST
+    if (AIM_ASSIST){
+      if (abs(ball.start_pos.x - end.x) <= ASST_THRESHOLD){
+        end.x = ball.start_pos.x;
+      }else if (abs(ball.start_pos.y - end.y) <= ASST_THRESHOLD){
+        end.y = ball.start_pos.y;
+      }
+    } //AIM ASSIST
     return end;
   }
 

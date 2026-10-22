@@ -238,7 +238,7 @@ struct PolySpawnAnimation{
 	}
 
 	//return true if a new poly was added for draw
-	bool update(float dt){
+	bool update(){
 		if (is_done) return false;
 		et += clock.restart().asSeconds();
 		if (et >= time_del){
