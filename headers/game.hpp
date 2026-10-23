@@ -307,12 +307,7 @@ struct Game{
     //ensure spawn animation is completed
     if (ball_state == MAKING && ps_anim.is_done){
       ball_state = MOVING;
-
-      //TODO apply aim assist to ball physics too
-      //NOTE rn, we only apply aim assis to aim drawing
-      // in the draw method
-      //NOTE factor out the aim_assist block into.a function and use that to get corrected 'pos' below
-      static_assert(false, "TODO: apply aim assist to ball physics");
+      apply_aim_assist(pos);
       ball.velocity = pos - ball.start_pos;
       if (ball.velocity.length() != 0){
         ball.velocity = -1.0f * ball.velocity.normalized();
@@ -403,15 +398,19 @@ struct Game{
     end.x = std::max(0.f, std::min(end.x, VIEW_SIZE.x));
     end.y = std::max(0.f, std::min(end.y, VIEW_SIZE.y));
 
-    //AIM_ASSIST
+    apply_aim_assist(end);
+    
+    return end;
+  }
+
+  void apply_aim_assist(V2f &end){
     if (AIM_ASSIST){
       if (abs(ball.start_pos.x - end.x) <= ASST_THRESHOLD){
         end.x = ball.start_pos.x;
       }else if (abs(ball.start_pos.y - end.y) <= ASST_THRESHOLD){
         end.y = ball.start_pos.y;
       }
-    } //AIM ASSIST
-    return end;
+    }
   }
 
   void _add_particle_system(V2f pos, sf::Color color){
