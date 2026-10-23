@@ -62,7 +62,7 @@ struct Game{
     temp_setting_btn("settings", {window.getSize().x/2.f-50, window.getSize().y-window.getSize().y/5.f})
   {
 
-    audio_man->load_bg_music("sounds/bg_music.mp3");
+    audio_man->load_bg_music("sounds/bg_music.ogg");
     audio_man->load_sound("sounds/die.mp3", "die");
     audio_man->load_sound("sounds/touch.wav", "hit");
       
@@ -307,6 +307,12 @@ struct Game{
     //ensure spawn animation is completed
     if (ball_state == MAKING && ps_anim.is_done){
       ball_state = MOVING;
+
+      //TODO apply aim assist to ball physics too
+      //NOTE rn, we only apply aim assis to aim drawing
+      // in the draw method
+      //NOTE factor out the aim_assist block into.a function and use that to get corrected 'pos' below
+      static_assert(false, "TODO: apply aim assist to ball physics");
       ball.velocity = pos - ball.start_pos;
       if (ball.velocity.length() != 0){
         ball.velocity = -1.0f * ball.velocity.normalized();
