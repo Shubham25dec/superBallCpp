@@ -129,7 +129,8 @@ struct Game{
       }
       text_sys.show_text(window, "touch:"+std::to_string(touch_info.pos.x)+", "+std::to_string(touch_info.pos.y), {10.0f, 50.0f});
       sf::CircleShape touch_c(5.f);
-      touch_c.setPosition(touch_info.pos);
+      V2f t_pos = window.mapPixelToCoords(sf::Vector2i(touch_info.pos), window.getDefaultView());
+      touch_c.setPosition(t_pos);
       window.draw(touch_c);
       text_sys.show_text(window, "level: "+ std::to_string(levelno), {10.0f, 30.0f});
       
