@@ -8,6 +8,7 @@
 #include "button.hpp"
 #include "animation.hpp"
 #include "settings.hpp"
+#include "scenes.hpp"
 
 //all polygon vertices are based on this size, to
 // make sure they remain in this exact ratio,
@@ -93,6 +94,8 @@ struct Game{
     sf::Clock clock;
     utils::FpsVusaliser fps_viz("font.ttf", 20);
     utils::TextSystem text_sys("font.ttf", 20);
+
+    scenes::level_selection(window, fps_viz.font);
   
     if (settings.music){
       audio_man->start_bg_music();

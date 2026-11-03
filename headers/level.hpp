@@ -52,7 +52,7 @@ struct Level {
 };
 
 
-// 3. Global hardcoded levels array
+// hardcoded levels
 inline const std::vector<LevelData> gameLevels = {
 
 // ############### level ###############
@@ -195,6 +195,26 @@ inline const std::vector<LevelData> gameLevels = {
         {V2f(255.f, 596.f), V2f(435.f, 596.f)}, 
     }
 },
+
+
+//####### newlevel@ 01-Nov-2026 07:35:55PM #######
+{
+    // lvl polygons: 
+    {
+        {V2f(405.f, 475.f), V2f(405.f, 595.f), V2f(525.f, 595.f), V2f(525.f, 475.f)},
+        {V2f(405.f, 775.f), V2f(405.f, 895.f), V2f(525.f, 895.f), V2f(525.f, 775.f)},
+        {V2f(615.f, 565.f), V2f(615.f, 805.f), V2f(675.f, 805.f), V2f(675.f, 565.f)},
+        {V2f(285.f, 835.f), V2f(285.f, 895.f), V2f(105.f, 895.f), V2f(105.f, 835.f)},
+        {V2f(45.f, 565.f), V2f(45.f, 805.f), V2f(105.f, 805.f), V2f(105.f, 565.f)},
+        {V2f(105.f, 535.f), V2f(285.f, 535.f), V2f(285.f, 475.f), V2f(105.f, 475.f)},
+        {SOLID_V2F, V2f(225.f, 625.f), V2f(225.f, 715.f), V2f(315.f, 715.f), V2f(315.f, 625.f), V2f(285.f, 655.f), V2f(255.f, 655.f)},
+    },
+
+    // lvl  lines: 
+    {
+    }
+}, 
+
 
 
 //older levels
