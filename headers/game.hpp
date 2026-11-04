@@ -12,7 +12,7 @@
 
 //all polygon vertices are based on this size, to
 // make sure they remain in this exact ratio,
-// we a sf::View of this size
+// we make an sf::View of this size
 inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1200.f};
 
 inline bool AIM_ASSIST = ON;
@@ -64,8 +64,8 @@ struct Game{
   {
 
     audio_man->load_bg_music("sounds/bg_music.ogg");
-    audio_man->load_sound("sounds/die.mp3", "die");
-    audio_man->load_sound("sounds/touch.wav", "hit");
+    audio_man->load_sound("sounds/die.wav", "die");
+    audio_man->load_sound("sounds/spawn.wav", "spawn");
       
     _load_current_level();
     _update_views(window);
@@ -74,7 +74,6 @@ struct Game{
   //set view so it properly resizes regardless of the screen res
   void _update_views(sf::RenderWindow& window){
     win_size = window.getSize();
-
     //game view: fixed 720x1200 world, uniformly scaled and centered (letterboxed)
     game_view.setSize(VIEW_SIZE);
     game_view.setCenter(VIEW_SIZE/2.f);
@@ -94,9 +93,17 @@ struct Game{
     sf::Clock clock;
     utils::FpsVusaliser fps_viz("font.ttf", 20);
     utils::TextSystem text_sys("font.ttf", 20);
+    sf::RectangleShape game_bounds(VIEW_SIZE);
+    game_bounds.setOutlineThickness(-5.f);
+    game_bounds.setOutlineColor(sf::Color::White);
+    game_bounds.setFillColor(sf::Color::Transparent);
 
-    scenes::level_selection(window, fps_viz.font);
-  
+    int selected_levelno = scenes::level_selection(window, fps_viz.font);
+    if (selected_levelno >= 0){
+      levelno = selected_levelno;
+      _load_current_level();
+    }
+
     if (settings.music){
       audio_man->start_bg_music();
     }
@@ -119,14 +126,11 @@ struct Game{
       //draw
       window.clear(sf::Color(63, 72, 87));
       window.setView(game_view); //game is drawn in world space
-      sf::RectangleShape world_bg(VIEW_SIZE); //default position is (0,0)
-      world_bg.setFillColor(sf::Color(40, 46, 58)); //different from the clear color
-      window.draw(world_bg);
 
       _draw(window);
 
-      //window.setView(ui_view); //everything below is drawn in real pixels
       window.setView(window.getDefaultView());
+      window.draw(game_bounds);
       if (settings.show_fps){
         fps_viz.show_fps(window, {10.0f, 10.0f});
       }
@@ -181,7 +185,7 @@ struct Game{
     pda_man.update(dt);
     bool was_added = ps_anim.update();
     if (was_added && settings.sound){
-      audio_man->play_sound("hit");
+      audio_man->play_sound("spawn");
     }
     if (!ps_anim.is_done) return;
     
@@ -189,7 +193,7 @@ struct Game{
     if (result.ball_collides){
       _add_particle_system(result.collision_pos,
                            result.collision_obj_color);
-      if (settings.sound) piano_np.play_next_note();//audio_man->play_sound("hit");
+      if (settings.sound) piano_np.play_next_note();
       auto polygon = current_level.polygons[result.collided_poly_index];
       if (polygon.is_mortal){
         pda_man.add_animation(polygon);
@@ -206,8 +210,8 @@ struct Game{
     }
     if (ball.isdead && ball_state != MAKING) ball_state = UNBORN;
     //ball.end_pos is in world space so compare against VIEW_SIZE, not the pixel win_size
-    if (!ball.isdead && (ball.end_pos.x > VIEW_SIZE.x || ball.end_pos.x < 0 ||
-       ball.end_pos.y > VIEW_SIZE.y || ball.end_pos.y < 0)){
+    if (!ball.isdead && (ball.end_pos.x >= VIEW_SIZE.x || ball.end_pos.x <= 0 ||
+       ball.end_pos.y >= VIEW_SIZE.y || ball.end_pos.y <= 0)){
       _add_particle_system(ball.end_pos, ball.ball_shape.getFillColor());
       if (current_level.get_alive_poly_count() == 0){
         //FIXME since get_live_poly_count iterates over polygons, we can count it somewhere else where we already iterating for eg drawing.
@@ -216,7 +220,7 @@ struct Game{
         ps_anim.reset(&current_level); //only reset spawn animation when a level completes!
         return;
       }
-      _reset_level();
+      _reset_level(); //ball outside screen so reset
       if (settings.sound) audio_man->play_sound("die");
     }
   }

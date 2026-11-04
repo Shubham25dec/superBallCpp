@@ -8,7 +8,7 @@ typedef bool ToggleOpt;
 #define ON   true
 
 struct Settings{
-  ToggleOpt music = ON;
+  ToggleOpt music = OFF;
   ToggleOpt sound = ON;
   ToggleOpt particles = ON;
   ToggleOpt show_fps = ON;

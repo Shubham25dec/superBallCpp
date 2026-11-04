@@ -19,11 +19,11 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
   
   const size_t col_count = 5,
          row_count = 10,
-         top_pad   = 10, // padding from top
+         top_pad   = 100, // padding from top
          side_pad  = 10, // padding from left & right
          ib_pad    = 10; // inter-button paddig
 
-  const float button_size = ((winsize.x - side_pad*2 - (col_count * ib_pad))) / col_count; //button is supposed to be sqaure shape
+  const float button_size = ((winsize.x - side_pad*2 - ((col_count-1) * ib_pad))) / col_count; //button is supposed to be sqaure shape
   
   printf("W:%f, H:%f, levels:%zu, button_size:%f\n", winsize.x, winsize.y, level_count, button_size);
   
@@ -36,22 +36,20 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
     
   size_t current_no = 0;
 
-  auto update_button = [&button, &button_size, &BUTTON_COLOR1, &BUTTON_COLOR2] (size_t col, size_t row, bool is_selected=false) {
+  //lambda func to update button
+  auto update_button = [&button, &button_size] (size_t col, size_t row) {
     const float x = side_pad
-              + ((col!=0 || col!=col_count) ? ib_pad : 0) * col
+              + ( (col!=0) ? ib_pad : 0) * col
               + button_size * col;
     const float y = top_pad
-              + ((row!=0 || row!=row_count) ? ib_pad : 0) * row
+              + ( (row!=0) ? ib_pad : 0) * row
               + button_size * row;
     button.setPosition({x, y});
-    if (is_selected)
-      button.setFillColor(BUTTON_COLOR2);
-    else
-      button.setFillColor(BUTTON_COLOR1);
   };
 
+  // lambda func to update text
   auto update_text = [&current_no, &button_text, &button] (){
-    button_text.setString(std::to_string(current_no));
+    button_text.setString(std::to_string(current_no+1));
     auto bounds = button_text.getLocalBounds();
     button_text.setOrigin(bounds.position + bounds.size/2.f);
     button_text.setPosition(button.getPosition()+button.getLocalBounds().size/2.f);
@@ -80,6 +78,27 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
         if (touch->finger != touch_info.fingerid) continue;
         touch_info.pos = window.mapPixelToCoords(touch->position);
       }
+
+
+      //NOTE: Temporary block below
+
+      if (const auto* touch = event->getIf<sf::Event::MouseButtonPressed>()){
+        if (touch_info.active) continue;
+        touch_info.active = true;
+        touch_info.pos = window.mapPixelToCoords(touch->position);
+      }
+      if (event->is<sf::Event::MouseButtonReleased>()){
+        if (return_value != -1){
+          return return_value;
+        }
+        touch_info = {};
+      }
+      if (const auto* touch = event->getIf<sf::Event::MouseMoved>()){
+        touch_info.pos = window.mapPixelToCoords(touch->position);
+      }
+
+      // NOTE: Temporary block above
+  
     }
 
     window.clear(bg_color);
@@ -88,9 +107,12 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
     bool should_break = false;
     for (size_t row = 0; row < row_count; row++){
       for (size_t col = 0; col < col_count; col++){
-        update_button(col, row, (return_value == (int)current_no));
+        update_button(col, row);
         if (touch_info.active && button.getGlobalBounds().contains(touch_info.pos)){
           return_value = current_no;
+          button.setFillColor(BUTTON_COLOR2);
+        }else{
+          button.setFillColor(BUTTON_COLOR1);
         }
         update_text();
         window.draw(button);
