@@ -210,7 +210,6 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
   const float freq = 5.f; // how fast button does updown
   const float delY = 0.005f; // how far button moves from original pos (relative to winsize.y)
   
-  bool touch_ended;
   //mainloop
   while (1){
     // Animate start button
@@ -221,13 +220,15 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
     while (const std::optional event = window.pollEvent()){
       if (__return_on_exit_event__(event)) return APP_EXIT;
       __on_touch_begin_event__(event, touch_info, window);
-      touch_ended = __on_touch_end_event__(event, touch_info);
+      
+      bool touch_ended = __on_touch_end_event__(event, touch_info);
+      if (touch_ended && start_button.getGlobalBounds().contains(touch_info.pos)){
+        return PLAY;
+      }
       __on_touch_move_event__(event, touch_info, window);
     }
 
-    if (touch_ended && start_button.getGlobalBounds().contains(touch_info.pos)){
-      return PLAY;
-    }
+    
 
     window.clear(bg_color);
 

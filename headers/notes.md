@@ -1,18 +1,15 @@
 
 [priority TODOs]
-+ many structs are loading the font individually!
-  since the font is same, maybe they should accept
-  a font object pointer/reference instead of font_path string
+# none
 
 [game TODOs]
 + update the ball in steps to avoid tunneling glitches
++ hardcode a default texture (array) and use that when some texture is missing!
 + save game data
 + level selection menu
 + ui screen and ui implementation
 + add textured buttons for ui
-+ fix scaling of levels & ui
 + add Animation to:
-  - shapes loading
   - ball trail
 + review performance bottlenecks
 + 
