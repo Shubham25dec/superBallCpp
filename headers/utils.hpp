@@ -1,22 +1,25 @@
 #pragma once
 #include "pch.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 
 namespace utils{
-    
+
+
+using V2f = sf::Vector2f;
 
 typedef struct TouchInfo{
-  sf::Vector2f pos;
+  V2f pos;
   unsigned int fingerid;
   bool active = false;
 }TouchInfo;
 
 
 [[nodiscard]]
-inline sf::RectangleShape makeLine(sf::Vector2f a, sf::Vector2f b, float thickness, sf::Color color)
+inline sf::RectangleShape makeLine(V2f a, V2f b, float thickness, sf::Color color)
 {
-    sf::Vector2f d = b - a;
+    V2f d = b - a;
     float length = std::hypot(d.x, d.y);
 
     sf::RectangleShape rect({length, thickness});
@@ -28,7 +31,7 @@ inline sf::RectangleShape makeLine(sf::Vector2f a, sf::Vector2f b, float thickne
 }
 
 [[nodiscard]]
-inline sf::CircleShape makeCircle(float radius, sf::Vector2f center, sf::Color color=sf::Color::White){
+inline sf::CircleShape makeCircle(float radius, V2f center, sf::Color color=sf::Color::White){
     sf::CircleShape cs;
     cs.setRadius(radius);
     cs.setPosition(center);
@@ -80,7 +83,7 @@ struct FpsVusaliser{
   }
 
   // return dt
-  float show_fps(sf::RenderWindow& window, sf::Vector2f at={10.0f, 10.0f}){
+  float show_fps(sf::RenderWindow& window, V2f at={10.0f, 10.0f}){
       float dt = fps_clock.restart().asSeconds();
       timer += dt;
       if (timer >= 0.5f){
@@ -106,7 +109,7 @@ struct TextSystem{
         initial_size = a_charsize;
     }
 
-    void show_text(sf::RenderTarget& target, const std::string& msg, sf::Vector2f at, sf::Color color=sf::Color::White, size_t current_charsize=0){
+    void show_text(sf::RenderTarget& target, const std::string& msg, V2f at, sf::Color color=sf::Color::White, size_t current_charsize=0){
         text.setPosition(at);
         text.setFillColor(color);
         if (current_charsize != 0){
@@ -121,7 +124,7 @@ struct TextSystem{
 };//TextSytem
 
 
-inline float distance(sf::Vector2f A, sf::Vector2f B){
+inline float distance(V2f A, V2f B){
     float dx = A.x - B.x;
     float dy = A.y - B.y;
     return std::sqrtf(dx*dx + dy*dy);
@@ -129,7 +132,6 @@ inline float distance(sf::Vector2f A, sf::Vector2f B){
 
 
 
-using V2f = sf::Vector2f;
 //Draw arrow cap at the end_pos of a line
 inline void draw_arrow_cap(sf::RenderTarget& target, V2f start_pos, V2f end_pos,
         float barb_length = 20.0f,
@@ -148,6 +150,21 @@ inline void draw_arrow_cap(sf::RenderTarget& target, V2f start_pos, V2f end_pos,
 }
 
 
+inline void draw_sprite_bounds(sf::RenderWindow& window,
+        sf::Sprite& sprite,
+        sf::Color color = sf::Color::Red,
+        float width = 4.f)
+{
+    sf::FloatRect bounds = sprite.getGlobalBounds();
+    sf::RectangleShape rect(bounds.size);
+    rect.setFillColor(sf::Color::Transparent);
+    rect.setOutlineThickness(width);
+    rect.setOutlineColor(color);
+    rect.setPosition(sprite.getPosition());
+    window.draw(rect);
+}
+
+/*
 inline void draw_dotted_line(sf::RenderTarget& target,
             V2f start, V2f end,
             float dot_radius = 4.f,
@@ -167,6 +184,8 @@ inline void draw_dotted_line(sf::RenderTarget& target,
             target.draw(shape);
             start += (dir * dot_gap);
         }
-    }
+}
+*/
+
 
 };//namespace utils

@@ -44,7 +44,7 @@ inline bool __on_touch_end_event__(const std::optional<sf::Event>& event, utils:
   if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
     if (touch->finger != touch_info.fingerid)
       return false; // not the same finger!!
-    touch_info = {};
+    touch_info.active = false;
     return true;
   }
   return false;
@@ -131,7 +131,6 @@ inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color b
       __on_touch_move_event__(event, touch_info, window);
 
       //NOTE: Temporary block below
-
       if (const auto* touch = event->getIf<sf::Event::MouseButtonPressed>()){
         if (touch_info.active) continue;
         touch_info.active = true;
@@ -146,7 +145,6 @@ inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color b
       if (const auto* touch = event->getIf<sf::Event::MouseMoved>()){
         touch_info.pos = window.mapPixelToCoords(touch->position);
       }
-
       // NOTE: Temporary block above
   
     }
@@ -198,6 +196,7 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
   utils::TouchInfo touch_info;
   sf::Clock clock;
   sf::Sprite about_button(asset_man->get_texture_ref("about_button"));
+  #warning "unfinished"
   
   sf::Sprite start_button(asset_man->get_texture_ref("start_button"));
   const float target_width  = win_size.x * 0.5f;
@@ -228,11 +227,10 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
       __on_touch_move_event__(event, touch_info, window);
     }
 
-    
-
     window.clear(bg_color);
 
     window.draw(start_button);
+    utils::draw_sprite_bounds(window, start_button);
     
     window.display();
   }
@@ -240,6 +238,11 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
 }
 
 
+inline void show_about(sf::RenderWindow& window, sf::Font& font)
+{
+  sf::Text About_text(font);
+  #warning "unfinished"
+}
 
 
 }//namespace scenes
