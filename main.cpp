@@ -19,6 +19,7 @@ int main() {
     audio_man.load_sound("resources/sounds/spawn.wav", "spawn");
 
     asset_man.load_texture("resources/textures/start-button.png", "start_button");
+    asset_man.load_texture("resources/textures/about-button.png", "about_button");
     
     
     Game game(window, &audio_man, &asset_man, &piano_np);

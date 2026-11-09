@@ -190,10 +190,8 @@ typedef enum {
   SETTINGS,
   PLAY
 }MainMenuChoice;
-
 //main menu screen
 // TODO: ADD settings, about buttons
-
 inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_man, sf::Color bg_color={85, 85, 100})
 {
   V2f win_size = (V2f) window.getSize();
@@ -239,6 +237,9 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
   }
   
 }
+
+
+
 
 }//namespace scenes
 
