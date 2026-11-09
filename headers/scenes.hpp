@@ -3,14 +3,72 @@
 #include "level.hpp"
 #include "rounded_rectangle.hpp"
 #include "utils.hpp"
+#include "asset_manager.hpp"
+
 
 namespace scenes{
 
 using V2f = sf::Vector2f;
 
+inline bool __return_on_exit_event__(const std::optional<sf::Event>& event)
+{
+    if (event->is<sf::Event::Closed>()) return true;
+    if (const auto* key = event->getIf<sf::Event::KeyPressed>()){
+      if (key->code == sf::Keyboard::Key::Escape){
+        return true;
+      }
+    }
+    return false;
+}
+
+
+//return true if event was sf::TouchBegan, else false.
+//updates the touch_info struct if its not active
+inline bool __on_touch_begin_event__(const std::optional<sf::Event>& event, utils::TouchInfo& touch_info, sf::RenderWindow& window)
+{
+  if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
+      if (touch_info.active) return true;
+      touch_info.active = true;
+      touch_info.fingerid = touch->finger;
+      touch_info.pos = window.mapPixelToCoords(touch->position);
+      return true;
+    }
+    return false;
+}
+
+
+// return true if touch_end event of same finger occurs.
+// resets the touch_info struct.
+inline bool __on_touch_end_event__(const std::optional<sf::Event>& event, utils::TouchInfo& touch_info)
+{
+  if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
+    if (touch->finger != touch_info.fingerid)
+      return false; // not the same finger!!
+    touch_info = {};
+    return true;
+  }
+  return false;
+}
+
+
+// return true if current finger moved, false otherwise
+// updates the touch_info position struct to current touch pos
+inline bool __on_touch_move_event__(const std::optional<sf::Event>& event, utils::TouchInfo& touch_info, sf::RenderWindow& window)
+{
+  if (const auto* touch = event->getIf<sf::Event::TouchMoved>()){
+    if (touch->finger != touch_info.fingerid){
+      return false;
+    }
+    touch_info.pos = window.mapPixelToCoords(touch->position);
+    return true;
+  }
+  return false;
+}
+
+
 // Level selection screen
 // return -1 if no level selected else levelno
-inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color bg_color={85, 85, 100})
+inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color bg_color={85, 85, 100})
 {
   const V2f winsize = (V2f) window.getSize();
   const size_t level_count = gameLevels.size();
@@ -30,7 +88,7 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
   RoundedRectangleShape button({button_size, button_size}, 10);
   button.setFillColor({0, 125, 125}); // cyan
 
-  sf::Text button_text(font, "0");
+  sf::Text button_text(*font, "0");
   button_text.setFillColor({0, 0, 0}); // black
   button_text.setCharacterSize(button_size/3.f);
     
@@ -60,25 +118,17 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
   utils::TouchInfo touch_info;
   while (1){
     while (const std::optional event = window.pollEvent()){
-      if (event->is<sf::Event::Closed>()) return return_value;
-      if (const auto* touch = event->getIf<sf::Event::TouchBegan>()){
-        if (touch_info.active) continue;
-        touch_info.active = true;
-        touch_info.fingerid = touch->finger;
-        touch_info.pos = window.mapPixelToCoords(touch->position);
+      if (__return_on_exit_event__(event)){
+        return return_value;
       }
-      if (const auto* touch = event->getIf<sf::Event::TouchEnded>()){
-        if (touch->finger != touch_info.fingerid) continue;
+      __on_touch_begin_event__(event, touch_info, window); //sets touch_info struct on sf::TouchBegan event
+      
+      if (__on_touch_end_event__(event, touch_info)){
         if (return_value != -1){
           return return_value;
         }
-        touch_info = {};
       }
-      if (const auto* touch = event->getIf<sf::Event::TouchMoved>()){
-        if (touch->finger != touch_info.fingerid) continue;
-        touch_info.pos = window.mapPixelToCoords(touch->position);
-      }
-
+      __on_touch_move_event__(event, touch_info, window);
 
       //NOTE: Temporary block below
 
@@ -132,6 +182,63 @@ inline int level_selection(sf::RenderWindow& window, sf::Font& font, sf::Color b
   return return_value;
 }// level_selection
 
+
+
+typedef enum {
+  APP_EXIT,
+  ABOUT,
+  SETTINGS,
+  PLAY
+}MainMenuChoice;
+
+//main menu screen
+// TODO: ADD settings, about buttons
+
+inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_man, sf::Color bg_color={85, 85, 100})
+{
+  V2f win_size = (V2f) window.getSize();
+  utils::TouchInfo touch_info;
+  sf::Clock clock;
+  sf::Sprite about_button(asset_man->get_texture_ref("about_button"));
   
-}//scenes
+  sf::Sprite start_button(asset_man->get_texture_ref("start_button"));
+  const float target_width  = win_size.x * 0.5f;
+  auto scaleX = target_width / start_button.getLocalBounds().size.x;
+  start_button.setScale({scaleX, scaleX}); // scaling w\ respect to width only so it retains ratio
+  const auto bsize = start_button.getGlobalBounds().size;
+  const float posX = (win_size.x - bsize.x) / 2.f;
+  const float posY = (win_size.y - bsize.y) / 2.f;
+  start_button.setPosition({posX, posY});
+  const float freq = 5.f; // how fast button does updown
+  const float delY = 0.005f; // how far button moves from original pos (relative to winsize.y)
+  
+  bool touch_ended;
+  //mainloop
+  while (1){
+    // Animate start button
+    float y = sinf(clock.getElapsedTime().asSeconds()*freq) * (win_size.y * delY);
+    V2f pos = {posX, posY+y};
+    start_button.setPosition(pos);
+    
+    while (const std::optional event = window.pollEvent()){
+      if (__return_on_exit_event__(event)) return APP_EXIT;
+      __on_touch_begin_event__(event, touch_info, window);
+      touch_ended = __on_touch_end_event__(event, touch_info);
+      __on_touch_move_event__(event, touch_info, window);
+    }
+
+    if (touch_ended && start_button.getGlobalBounds().contains(touch_info.pos)){
+      return PLAY;
+    }
+
+    window.clear(bg_color);
+
+    window.draw(start_button);
+    
+    window.display();
+  }
+  
+}
+
+}//namespace scenes
 

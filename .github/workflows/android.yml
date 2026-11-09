@@ -29,8 +29,7 @@ jobs:
       - name: Stage game assets
         run: |
           mkdir -p android/app/src/main/assets
-          cp font.ttf android/app/src/main/assets/
-          cp -r sounds android/app/src/main/assets/
+          cp -r resources android/app/src/main/assets/
 
       - name: Build debug APK
         working-directory: android

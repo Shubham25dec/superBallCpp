@@ -29,8 +29,8 @@ struct Settings{
 
 
 
-inline void settings_screen(sf::RenderWindow& window, Settings& settings, const sf::Font& font){
-  sf::Text text(font);
+inline void settings_screen(sf::RenderWindow& window, Settings& settings, sf::Font* font){
+  sf::Text text(*font);
   sf::RectangleShape rect;
   text.setCharacterSize(40);
   float padx = 20.f;

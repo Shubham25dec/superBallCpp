@@ -1,5 +1,11 @@
 
+[priority TODOs]
++ many structs are loading the font individually!
+  since the font is same, maybe they should accept
+  a font object pointer/reference instead of font_path string
+
 [game TODOs]
++ update the ball in steps to avoid tunneling glitches
 + save game data
 + level selection menu
 + ui screen and ui implementation

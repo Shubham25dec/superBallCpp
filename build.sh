@@ -7,6 +7,7 @@ time clang++ main.cpp\
  -o test.o \
  -include ./headers/pch.hpp\
  -lsfml-system -lsfml-window -lsfml-graphics\
- -lsfml-audio
+ -lsfml-audio\
+ $@
 
 

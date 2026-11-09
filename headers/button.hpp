@@ -22,11 +22,12 @@ struct TouchButton{
 
   TouchButton(
      const std::string& text,
+     sf::Font* font,
      sf::Vector2f pos    = {100, 100},
      sf::Vector2f size   = {100, 100},
      sf::Color    color  = sf::Color::White,
      sf::Color text_color= sf::Color::Black
-   )
+   ): text_man(font)
   {
     shape.setFillColor(color);
     shape.setSize(size);

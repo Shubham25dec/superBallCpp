@@ -18,7 +18,7 @@ inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1200.f};
 inline bool AIM_ASSIST = ON;
 inline constexpr float ASST_THRESHOLD = 10.f; //a diff of this many pixels triggers aim assistant.
 
-typedef enum BallState{
+  typedef enum BallState{
   MOVING,
   MAKING,
   UNBORN
@@ -32,7 +32,8 @@ struct Game{
   BallState ball_state = UNBORN;
   sf::Vector2u win_size;
   AudioManager* audio_man;
-  PianoNotePlayer piano_np;
+  AssetManager* asset_man;
+  PianoNotePlayer* piano_np;
   utils::RNG rng;
   ParticleSystemManager particle_system_man;
   PolyDeathAnimationManager pda_man;
@@ -53,20 +54,16 @@ struct Game{
   //
   // TODO:SSSSSSSSSSSSSSSSSSS
   
-  Game(sf::RenderWindow& window, AudioManager* a_audio_man):current_level(gameLevels[levelno]),
+  Game(sf::RenderWindow& window, AudioManager* a_audio_man, AssetManager* a_asset_man, PianoNotePlayer* a_piano_np):current_level(gameLevels[levelno]),
     audio_man(a_audio_man),
-    piano_np(audio_man),
+    asset_man(a_asset_man),
+    piano_np(a_piano_np),
     particle_system_man(&rng),
     ps_anim(&current_level),
-    temp_nxt_btn("next", {window.getSize().x-window.getSize().x/6.f, window.getSize().y-window.getSize().y/5.f}),
-    temp_pre_btn("prev", {window.getSize().x/36.f, window.getSize().y-window.getSize().y/5.f}),
-    temp_setting_btn("settings", {window.getSize().x/2.f-50, window.getSize().y-window.getSize().y/5.f})
-  {
-
-    audio_man->load_bg_music("sounds/bg_music.ogg");
-    audio_man->load_sound("sounds/die.wav", "die");
-    audio_man->load_sound("sounds/spawn.wav", "spawn");
-      
+    temp_nxt_btn("next", &asset_man->font, {window.getSize().x-window.getSize().x/6.f, window.getSize().y-window.getSize().y/5.f}),
+    temp_pre_btn("prev", &asset_man->font, {window.getSize().x/36.f, window.getSize().y-window.getSize().y/5.f}),
+    temp_setting_btn("settings", &asset_man->font, {window.getSize().x/2.f-50, window.getSize().y-window.getSize().y/5.f})///
+  {      
     _load_current_level();
     _update_views(window);
   }
@@ -85,20 +82,21 @@ struct Game{
     float top = 0.f; //(1-vp_height) /2.f;
     const sf::FloatRect view_rect({left, top}, {vp_width, vp_height});
     game_view.setViewport(view_rect);
-
-    window.setView(game_view);
+    
   }
 
   void mainloop(sf::RenderWindow& window){
     sf::Clock clock;
-    utils::FpsVusaliser fps_viz("font.ttf", 20);
-    utils::TextSystem text_sys("font.ttf", 20);
+    utils::FpsVusaliser fps_viz(&asset_man->font, 20);
+    utils::TextSystem text_sys(&asset_man->font, 20);
     sf::RectangleShape game_bounds(VIEW_SIZE);
     game_bounds.setOutlineThickness(-5.f);
     game_bounds.setOutlineColor(sf::Color::White);
     game_bounds.setFillColor(sf::Color::Transparent);
 
-    int selected_levelno = scenes::level_selection(window, fps_viz.font);
+    scenes::main_menu(window, asset_man); //main menu
+    
+    int selected_levelno = scenes::level_selection(window, &asset_man->font);
     if (selected_levelno >= 0){
       levelno = selected_levelno;
       _load_current_level();
@@ -112,7 +110,7 @@ struct Game{
     
     while (window.isOpen()){
       dt = clock.restart().asSeconds();
-      keep_running = _handle_events(window, text_sys.font);
+      keep_running = _handle_events(window);
       if (!keep_running){
         window.close();
         return;
@@ -193,7 +191,7 @@ struct Game{
     if (result.ball_collides){
       _add_particle_system(result.collision_pos,
                            result.collision_obj_color);
-      if (settings.sound) piano_np.play_next_note();
+      if (settings.sound) piano_np->play_next_note();
       auto polygon = current_level.polygons[result.collided_poly_index];
       if (polygon.is_mortal){
         pda_man.add_animation(polygon);
@@ -227,7 +225,7 @@ struct Game{
 
   //returns false on exit events
   [[nodiscard]]
-  bool _handle_events(sf::RenderWindow&window, const sf::Font& temp_font){
+  bool _handle_events(sf::RenderWindow&window){
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>()) {
         return false;
@@ -238,7 +236,7 @@ struct Game{
         }
       }
       if (event->is<sf::Event::FocusLost>()){
-        (void) window.setActive(false); //FIX MAY FAIL ignoring return value
+        (void) window.setActive(false);
         audio_man->stop_bg_music();
       }
       if (event->is<sf::Event::FocusGained>()){
@@ -256,7 +254,7 @@ struct Game{
       if (event->is<sf::Event::MouseButtonReleased>()){
         auto pos = V2f(window.mapPixelToCoords(m_pos, game_view));
         auto pixel_pos = V2f(window.mapPixelToCoords( m_pos, window.getDefaultView()));
-        _on_screen_click_up(pos, pixel_pos, window, temp_font);
+        _on_screen_click_up(pos, pixel_pos, window);
         touch_info.active = false;
       }
       if (event->is<sf::Event::MouseMoved>()){
@@ -274,7 +272,7 @@ struct Game{
         if (touch->finger == touch_info.fingerid) {//ensure same finger event 
           auto pos = V2f(window.mapPixelToCoords(touch->position, game_view));
           V2f pixel_pos = V2f(window.mapPixelToCoords(touch->position, window.getDefaultView())); //raw pixels, needed by ui buttons
-          _on_screen_click_up(pos, pixel_pos, window, temp_font);
+          _on_screen_click_up(pos, pixel_pos, window);
           touch_info.active = false;
         }
       }
@@ -290,7 +288,6 @@ struct Game{
 
   void _on_screen_click_down(sf::Vector2f pos){
     if (ball_state == MOVING){
-      //triggers 'if' block below
       // start again if we touch while ball moving
       _reset_level();
     }
@@ -311,7 +308,7 @@ struct Game{
   
 
   //pos is in world space (game), pixel_pos is in real screen pixels (ui)
-  void _on_screen_click_up(sf::Vector2f pos, sf::Vector2f pixel_pos, sf::RenderWindow& window, const sf::Font& temp_font){
+  void _on_screen_click_up(sf::Vector2f pos, sf::Vector2f pixel_pos, sf::RenderWindow& window){
     //ensure spawn animation is completed
     if (ball_state == MAKING && ps_anim.is_done){
       ball_state = MOVING;
@@ -335,7 +332,7 @@ struct Game{
     }
     if (temp_setting_btn.is_touched(pixel_pos)){
       audio_man->bg_music.pause();
-      settings_screen(window, settings, temp_font);
+      settings_screen(window, settings, &asset_man->font);
       _apply_updated_settings();
     }
     //TODO: SSSSSSSSSSSSSSSSSSSSSSSS 
@@ -346,7 +343,7 @@ struct Game{
     ball.isdead = true;
     ball_state = UNBORN;
     _load_current_level();
-    piano_np.reset_note();
+    piano_np->reset_note();
   }
 
   void _load_current_level(void){

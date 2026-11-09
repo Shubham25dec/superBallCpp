@@ -70,10 +70,10 @@ struct PianoNotePlayer{
   const size_t MIN_ID = 1;
   int note_delta = 1; //whether notes go up or down 1 meansnup -1 down
   size_t current = MIN_ID;
-  PianoNotePlayer(AudioManager* a_audio_man):audio_man(a_audio_man){
+  PianoNotePlayer(AudioManager* a_audio_man, const std::string a_base_path):audio_man(a_audio_man){
     for (size_t i=1; i<9; i++){
       auto name = std::to_string(i);
-      audio_man->load_sound("sounds/"+name+".ogg", name);
+      audio_man->load_sound(a_base_path + name + ".ogg", name);
     }
   }
 
