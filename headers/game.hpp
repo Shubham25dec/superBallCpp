@@ -93,13 +93,15 @@ struct Game{
     game_bounds.setOutlineThickness(-5.f);
     game_bounds.setOutlineColor(sf::Color::White);
     game_bounds.setFillColor(sf::Color::Transparent);
+
+    
+    scenes::main_menu(window, asset_man);
     
     int selected_levelno = scenes::level_selection(window, &asset_man->font);
     if (selected_levelno >= 0){
       levelno = selected_levelno;
       _load_current_level();
     }
-    scenes::main_menu(window, asset_man); //main menu
     
     if (settings.music){
       audio_man->start_bg_music();

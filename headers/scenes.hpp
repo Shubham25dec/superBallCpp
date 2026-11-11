@@ -68,6 +68,7 @@ inline bool __on_touch_move_event__(const std::optional<sf::Event>& event, utils
 
 // Level selection screen
 // return -1 if no level selected else levelno
+// TODO: scrolling page if too many levels
 inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color bg_color={85, 85, 100})
 {
   const V2f winsize = (V2f) window.getSize();
@@ -182,6 +183,57 @@ inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color b
 
 
 
+
+inline const std::string about_string = R"(
+             Design & Programming
+                 Shubham Negi
+
+      Developed on Android, for Android!
+
+Your feedback and suggestions are most welcome
+         shubhamsnegi.25dec@gmail.com
+
+ While learning graphics programming with C++
+and SFML (sfml-dev.org), I came across a game
+ on the Play Store called "Okay?". Later that
+  day, I found myself developing a new game:
+            my own version of it.
+
+            Here I present to you
+                  SuperBall
+)";
+
+inline void show_about(sf::RenderWindow& window, sf::Font& font, sf::Color bg_color={26, 26, 65})
+{
+  V2f win_size = (V2f) window.getSize();
+  constexpr float padXY = 20.f;
+  
+  sf::Text about_text(font, about_string, win_size.y*0.06f);
+  about_text.setFillColor({180, 185, 185});
+  float scaleX = (win_size.x - padXY) / about_text.getLocalBounds().size.x;
+  about_text.setScale({scaleX, scaleX});
+  // Scaled to fit width (with padding)
+  const float t_h = about_text.getGlobalBounds().size.y; // height of rendered text
+  V2f pos = {padXY/2.f, (win_size.y - t_h)/2.f};
+  about_text.setPosition(pos);
+  
+  #pragma message("Todo: animate about text ")
+  #pragma message("wip : show_about function")
+
+  while (1){
+    while (const std::optional event = window.pollEvent()){
+      if (__return_on_exit_event__(event)){
+        return ;
+      }
+    }
+
+    window.clear(bg_color);
+    window.draw(about_text);
+    window.display();
+  }
+}
+
+
 typedef enum {
   APP_EXIT,
   ABOUT,
@@ -195,17 +247,22 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
   V2f win_size = (V2f) window.getSize();
   utils::TouchInfo touch_info;
   sf::Clock clock;
+
   sf::Sprite about_button(asset_man->get_texture_ref("about_button"));
-  #warning "unfinished"
+  const float abwidth = win_size.x * 0.1f;
+  const float abpadxy = win_size.x * 0.01f; //padding
+  utils::scale_sprite_to_width(about_button, abwidth);
+  const float abposX = win_size.x - abwidth - abpadxy;
+  const float abposY = 0.0f + 0.0f + abpadxy;
+  about_button.setPosition({abposX, abposY});
   
   sf::Sprite start_button(asset_man->get_texture_ref("start_button"));
-  const float target_width  = win_size.x * 0.5f;
-  auto scaleX = target_width / start_button.getLocalBounds().size.x;
-  start_button.setScale({scaleX, scaleX}); // scaling w\ respect to width only so it retains ratio
-  const auto bsize = start_button.getGlobalBounds().size;
-  const float posX = (win_size.x - bsize.x) / 2.f;
-  const float posY = (win_size.y - bsize.y) / 2.f;
-  start_button.setPosition({posX, posY});
+  utils::scale_sprite_to_width(start_button, (win_size.x * 0.5f));
+
+  const auto sbsize = start_button.getGlobalBounds().size;
+  const float sbposX = (win_size.x - sbsize.x) / 2.f;
+  const float sbposY = (win_size.y - sbsize.y) / 2.f;
+  start_button.setPosition({sbposX, sbposY});
   const float freq = 5.f; // how fast button does updown
   const float delY = 0.005f; // how far button moves from original pos (relative to winsize.y)
   
@@ -213,7 +270,7 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
   while (1){
     // Animate start button
     float y = sinf(clock.getElapsedTime().asSeconds()*freq) * (win_size.y * delY);
-    V2f pos = {posX, posY+y};
+    V2f pos = {sbposX, sbposY+y};
     start_button.setPosition(pos);
     
     while (const std::optional event = window.pollEvent()){
@@ -224,6 +281,9 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
       if (touch_ended && start_button.getGlobalBounds().contains(touch_info.pos)){
         return PLAY;
       }
+      if (touch_ended && about_button.getGlobalBounds().contains(touch_info.pos)){
+        show_about(window, asset_man->font);
+      }
       __on_touch_move_event__(event, touch_info, window);
     }
 
@@ -231,18 +291,14 @@ inline MainMenuChoice main_menu(sf::RenderWindow& window, AssetManager* asset_ma
 
     window.draw(start_button);
     utils::draw_sprite_bounds(window, start_button);
+    window.draw(about_button);
+    utils::draw_sprite_bounds(window, about_button);
     
     window.display();
   }
   
 }
 
-
-inline void show_about(sf::RenderWindow& window, sf::Font& font)
-{
-  sf::Text About_text(font);
-  #warning "unfinished"
-}
 
 
 }//namespace scenes

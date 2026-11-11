@@ -88,6 +88,7 @@ struct Ball{
     BallUpdateResult result;
     if (isdead) return result;//since already dead
     end_pos += (velocity * speed * dt);
+    // TODO: update the ball in smaller steps
     ball_shape.setPosition(end_pos);
 
     auto result1 = _handle_polygon_collision(polygons);

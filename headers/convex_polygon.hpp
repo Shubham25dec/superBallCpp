@@ -6,7 +6,8 @@
 using PolyPoints = std::vector<sf::Vector2f>;
 
 constexpr auto SOLID_V2F = sf::Vector2f(-1.0f, -1.0f);
-
+// NOTE: IMPORTANT : SOLID_V2F variable is also used by
+// level.hpp
 constexpr auto SHAPE_FILL = sf::Color(200, 207, 255);
 constexpr auto SHAPE_OUT  = sf::Color(10, 10, 10);
 //TODO: TRY DIFFERENT COLORS
@@ -15,7 +16,11 @@ constexpr float ROUND_RADIUS = 6.0f;  // max corner radius
 constexpr int   ARC_SEGMENTS = 6;      // points per rounded corner
 
 
-
+//TODO: try texture on this object
+// maybe that'll make it look more interesting...
+// for example a glass texture!!
+//TODO: Detect if given points form a concave shape
+// instead, if so, break the points into smaller convex shapes then draw. (for draw only)
 class ConvexPolygon : public sf::ConvexShape {
 public:
     bool is_mortal = true;
@@ -24,12 +29,10 @@ public:
     // instead of using getPoint() we access vertex from this array directly
     // that is because of the rounded corner
     // rounded corner adds more points to polygon, but they dont necessarily need to be considered during
-    // collision check!, we check with the original vertices (without rounded corner) and draw with rounded corner.
+    // collision check!, we check collision with the original vertices (without rounded corner) and draw with rounded corner.
+    //
 
-
-    //NOTE: Ensure that PolyPoints always pass a convex
-    // polygon. a concave polygon would break rendering
-    // and physics of the game!
+    //TODO: Handle convave shape points
     ConvexPolygon(const PolyPoints& a_points): sharp_poly_points(&a_points)
     {
         if (a_points[0] == SOLID_V2F){
@@ -48,6 +51,9 @@ public:
 
 
 private:
+    // WARNING: some or all parts of the following
+    // method maybe AI generated
+    // NOTE left by urmom
     static PolyPoints roundCorners(const PolyPoints& src, float radius, int segs) {
         const size_t n = src.size();
         if (n < 3 || radius <= 0.f)

@@ -164,6 +164,14 @@ inline void draw_sprite_bounds(sf::RenderWindow& window,
     window.draw(rect);
 }
 
+// scale the sprite such that its width becomes equal
+// to target_width. Height is scaled such that it keeps
+// the original aspect ratio of its texture
+inline void scale_sprite_to_width(sf::Sprite& sprite, float target_width){
+    float scaleX = target_width / sprite.getLocalBounds().size.x;
+    sprite.setScale({scaleX, scaleX});
+}
+
 /*
 inline void draw_dotted_line(sf::RenderTarget& target,
             V2f start, V2f end,
