@@ -213,7 +213,8 @@ struct PolyDeathAnimationManager{
 }; //PolyDeathAnimationManager
 
 
-
+//TODO: Change the spawn animation to something else
+// current one isnt that impressive
 struct PolySpawnAnimation{
 	Level* level;
 	sf::Clock clock;
@@ -266,3 +267,8 @@ struct PolySpawnAnimation{
 	
 };
 
+
+struct SceneChangeAnimation{
+	#pragma message("TODO: SceneChangeAnimation")
+	
+};

@@ -185,13 +185,11 @@ inline int level_selection(sf::RenderWindow& window, sf::Font* font, sf::Color b
 
 
 inline const std::string about_string = R"(
+----------------------------------------------
              Design & Programming
                  Shubham Negi
 
       Developed on Android, for Android!
-
-Your feedback and suggestions are most welcome
-         shubhamsnegi.25dec@gmail.com
 
  While learning graphics programming with C++
 and SFML (sfml-dev.org), I came across a game
@@ -201,21 +199,36 @@ and SFML (sfml-dev.org), I came across a game
 
             Here I present to you
                   SuperBall
+
+Your feedback and suggestions are most welcome
+         shubhamsnegi.25dec@gmail.com
+----------------------------------------------
+
 )";
 
 inline void show_about(sf::RenderWindow& window, sf::Font& font, sf::Color bg_color={26, 26, 65})
 {
   V2f win_size = (V2f) window.getSize();
   constexpr float padXY = 20.f;
-  
   sf::Text about_text(font, about_string, win_size.y*0.06f);
-  about_text.setFillColor({180, 185, 185});
   float scaleX = (win_size.x - padXY) / about_text.getLocalBounds().size.x;
   about_text.setScale({scaleX, scaleX});
   // Scaled to fit width (with padding)
-  const float t_h = about_text.getGlobalBounds().size.y; // height of rendered text
-  V2f pos = {padXY/2.f, (win_size.y - t_h)/2.f};
-  about_text.setPosition(pos);
+  about_text.setFillColor({180, 185, 185});
+  const size_t max_index = about_string.length() - 1;
+  size_t current_index = 0;
+  //lambda to update the about text
+  auto update_about_text = [&about_text, &win_size, &current_index](){
+    printf("%zu->%c \n", current_index, about_string[current_index]);
+    about_text.setString(about_string.substr(0, current_index)+" |");
+    const float t_h = about_text.getGlobalBounds().size.y; // height of rendered text
+    V2f pos = {padXY/2.f, (win_size.y - t_h)/2.f};
+    about_text.setPosition(pos);
+  };
+
+  sf::Clock clock;
+  const float next_char_delay = 0.02f; // seconds
+  float et = 0.0f;
   
   #pragma message("Todo: animate about text ")
   #pragma message("wip : show_about function")
@@ -225,6 +238,12 @@ inline void show_about(sf::RenderWindow& window, sf::Font& font, sf::Color bg_co
       if (__return_on_exit_event__(event)){
         return ;
       }
+    }
+    et += clock.getElapsedTime().asSeconds();
+    if ((current_index < max_index) &&
+        (et >= next_char_delay)){
+      current_index = current_index < max_index ?current_index+1 : current_index;
+      update_about_text();
     }
 
     window.clear(bg_color);

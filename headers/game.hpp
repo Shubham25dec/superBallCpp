@@ -15,6 +15,15 @@
 // we make an sf::View of this size
 inline constexpr sf::Vector2f VIEW_SIZE = {720.f, 1200.f};
 
+// TODO: the aim assist seems to be a
+// little inconsistent and wrong!
+// the aim aroow drawn, and actual ball
+// launch aren't following same direction
+// FIXME
+// FIX I tried to look into it, but couldnt find the issue
+// it isnt that bad though, maybe ill leave it as is
+// HINT: maybe because the apply_aim_assist
+// method is using ball.start_pos
 inline bool AIM_ASSIST = ON;
 inline constexpr float ASST_THRESHOLD = 10.f; //a diff of this many pixels triggers aim assistant.
 
@@ -94,7 +103,8 @@ struct Game{
     game_bounds.setOutlineColor(sf::Color::White);
     game_bounds.setFillColor(sf::Color::Transparent);
 
-    
+
+    scenes::show_about(window, asset_man->font);
     scenes::main_menu(window, asset_man);
     
     int selected_levelno = scenes::level_selection(window, &asset_man->font);
